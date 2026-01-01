@@ -8,185 +8,274 @@
     <title>Easy Go | Item</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-        body { font-family: 'Inter', sans-serif; min-height: 100vh; display: flex; flex-direction: column; }
+        body { font-family: 'Inter', sans-serif; background: #ffffff; color: #1a1a1a; min-height: 100vh; display: flex; flex-direction: column; }
+        .banner-clip { clip-path: polygon(0 0, 100% 0, 100% 85%, 0 100%); }
         .main-content { flex: 1; }
-        .quantity-btn { width: 45px; height: 45px; border-radius: 50%; }
-        .pack-option { transition: all 0.3s; }
-        .pack-option.selected { border-color: #10b981; background-color: #f0fdf4; }
-        .loader {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #10b981;
+        
+        /* Custom animations */
+        @keyframes bounce-short {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+        .animate-bounce-short { animation: bounce-short 3s infinite; }
+        
+        /* Pack option styling */
+        .pack-option {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .pack-option.selected {
+            border-color: #10b981;
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+            transform: scale(1.02);
+        }
+        .pack-option:hover:not(.selected) {
+            border-color: #3b82f6;
+            transform: translateY(-2px);
+        }
+        
+        /* Quantity controls */
+        .quantity-btn {
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
+            transition: all 0.2s;
         }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        .quantity-btn:active {
+            transform: scale(0.95);
         }
-        .delete-btn {
-            background: linear-gradient(135deg, #ef4444, #dc2626);
-            color: white;
-            padding: 0.5rem 1rem;
-            border-radius: 1rem;
-            font-weight: bold;
-            font-size: 0.875rem;
+        
+        /* Action buttons */
+        .action-btn {
             transition: all 0.3s;
         }
-        .delete-btn:hover {
-            background: linear-gradient(135deg, #dc2626, #b91c1c);
-            transform: scale(1.05);
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
         }
+        
+        /* Footer fix */
+        footer { margin-top: auto; }
     </style>
 </head>
-<body class="antialiased bg-gray-50 flex flex-col min-h-screen">
+<body class="antialiased flex flex-col min-h-screen">
 
+    <!-- Main Content -->
     <div class="main-content">
         <!-- Header with Banner -->
         <header class="relative mb-8">
-            <div class="h-40 overflow-hidden">
+            <div class="h-48 md:h-64 overflow-hidden banner-clip">
                 <img src="https://raw.githubusercontent.com/Clean-Scripts/EasyGo-Expense-Tracker/refs/heads/main/Banner.png" 
                      class="w-full h-full object-cover" alt="Easy Go Banner">
             </div>
             <div class="absolute -bottom-6 left-0 right-0 flex justify-center">
                 <img src="https://raw.githubusercontent.com/Clean-Scripts/EasyGo-Expense-Tracker/refs/heads/main/logo.png" 
-                     class="h-20 w-20 rounded-full border-4 border-white shadow-xl bg-white p-1">
+                     class="h-32 w-32 rounded-full border-4 border-white shadow-xl bg-white p-1">
             </div>
         </header>
 
-        <div class="max-w-4xl mx-auto px-4 pt-10 pb-8">
-            <!-- Back Button and Cart Info -->
-            <div class="flex justify-between items-center mb-8">
-                <a href="https://clean-scripts.github.io/Easygo-Menu/" 
-                   class="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-                    </svg>
-                    Back to Menu
-                </a>
-                <div id="cart-summary" class="hidden">
+        <div class="max-w-6xl mx-auto px-4 pt-10 pb-12">
+            <!-- Page Title & Cart Info -->
+            <div class="flex flex-col md:flex-row justify-between items-center mb-10 gap-6">
+                <div>
+                    <h1 id="page-title" class="text-4xl font-black uppercase tracking-tighter mb-2">Loading...</h1>
+                    <p class="text-gray-500 uppercase text-sm font-bold tracking-widest">Customize your order</p>
+                </div>
+                
+                <div id="cart-summary" class="bg-gray-900 text-white px-6 py-3 rounded-2xl flex items-center gap-4 hidden">
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-shopping-cart text-xl"></i>
+                        <div>
+                            <p class="text-xs font-bold uppercase tracking-widest text-gray-400">Cart Total</p>
+                            <p id="cart-total" class="text-2xl font-black">₹0</p>
+                        </div>
+                    </div>
                     <a href="https://clean-scripts.github.io/Easygo-Cart/" 
-                       class="inline-flex items-center gap-2 bg-green-100 text-green-700 px-4 py-2 rounded-2xl hover:bg-green-200">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                  d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
-                        </svg>
-                        <span id="cart-count" class="font-bold">0</span> items
+                       class="bg-green-500 text-white px-6 py-3 rounded-xl font-bold uppercase text-sm hover:bg-green-600 transition-all">
+                        View Cart
                     </a>
                 </div>
             </div>
 
             <!-- Item Details -->
-            <div id="item-details" class="bg-white rounded-3xl shadow-lg p-8 mb-8">
-                <!-- Item will be dynamically loaded here -->
-                <div class="flex justify-center">
-                    <div class="loader"></div>
-                </div>
-            </div>
-
-            <!-- Pack Size Selector (Hidden initially) -->
-            <div id="pack-selector" class="bg-white rounded-3xl shadow-lg p-8 mb-8 hidden">
-                <h3 class="text-2xl font-bold mb-6">Select Pack Size</h3>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="pack-options-container">
-                    <!-- Pack options will be dynamically loaded here -->
-                </div>
-            </div>
-
-            <!-- Quantity Selector (Hidden initially) -->
-            <div id="quantity-selector" class="bg-white rounded-3xl shadow-lg p-8 mb-8 hidden">
-                <div class="flex items-center justify-between mb-6">
-                    <h3 class="text-2xl font-bold">Quantity</h3>
-                    <button id="delete-item" class="delete-btn hidden">
-                        ❌ Delete Item
-                    </button>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 mb-12">
+                <!-- Left Column - Item Image -->
+                <div class="flex items-center justify-center">
+                    <div class="bg-gray-50 rounded-[2.5rem] p-8 border-2 border-gray-100 w-full">
+                        <img id="item-image" 
+                             src="" 
+                             alt="Item" 
+                             class="w-full h-auto object-contain rounded-2xl shadow-lg">
+                    </div>
                 </div>
                 
-                <div class="flex flex-col items-center gap-6">
-                    <div class="flex items-center justify-center gap-6">
-                        <button id="decrease-qty" class="quantity-btn bg-gray-100 hover:bg-gray-200 text-2xl font-bold disabled:opacity-50 disabled:cursor-not-allowed" disabled>-</button>
-                        <span id="quantity-display" class="text-5xl font-black w-20 text-center">1</span>
-                        <button id="increase-qty" class="quantity-btn bg-gray-100 hover:bg-gray-200 text-2xl font-bold">+</button>
+                <!-- Right Column - Item Info -->
+                <div>
+                    <div class="mb-8">
+                        <p id="item-category" class="text-xs font-black text-green-600 uppercase tracking-widest mb-2">Loading...</p>
+                        <h2 id="item-name" class="text-3xl font-black uppercase mb-4">Loading...</h2>
+                        <p id="item-description" class="text-gray-600 text-lg leading-relaxed">Loading...</p>
+                        
+                        <!-- Special Tags -->
+                        <div class="flex gap-2 mt-6">
+                            <span class="px-4 py-2 bg-red-50 text-red-600 rounded-xl text-xs font-bold uppercase">🔥 Hot & Fresh</span>
+                            <span class="px-4 py-2 bg-blue-50 text-blue-600 rounded-xl text-xs font-bold uppercase">🍴 8+ Pieces</span>
+                            <span class="px-4 py-2 bg-green-50 text-green-600 rounded-xl text-xs font-bold uppercase">🌿 100% Veg</span>
+                        </div>
                     </div>
-                    <p id="quantity-info" class="text-center text-gray-600 text-sm"></p>
                     
-                    <!-- Quick Quantity Buttons -->
-                    <div class="flex gap-2 mt-4">
-                        <button class="quick-qty-btn px-4 py-2 bg-gray-100 rounded-xl hover:bg-gray-200 text-sm font-medium" data-qty="1">1</button>
-                        <button class="quick-qty-btn px-4 py-2 bg-gray-100 rounded-xl hover:bg-gray-200 text-sm font-medium" data-qty="2">2</button>
-                        <button class="quick-qty-btn px-4 py-2 bg-gray-100 rounded-xl hover:bg-gray-200 text-sm font-medium" data-qty="4">4</button>
-                        <button class="quick-qty-btn px-4 py-2 bg-gray-100 rounded-xl hover:bg-gray-200 text-sm font-medium" data-qty="8">8</button>
+                    <!-- Pack Size Selector -->
+                    <div class="mb-10">
+                        <h3 class="text-xl font-black uppercase mb-6">Select Pack Size</h3>
+                        <div class="grid grid-cols-2 gap-4" id="pack-options-container">
+                            <!-- Pack options will be dynamically loaded -->
+                            <div class="flex items-center justify-center py-10">
+                                <div class="loader"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Quantity Selector -->
+                    <div class="mb-10">
+                        <h3 class="text-xl font-black uppercase mb-6">Quantity</h3>
+                        <div class="flex flex-col items-center gap-8">
+                            <div class="flex items-center justify-center gap-8">
+                                <button id="decrease-qty" 
+                                        class="quantity-btn bg-gray-100 hover:bg-gray-200 text-3xl font-black disabled:opacity-30 disabled:cursor-not-allowed"
+                                        disabled>-</button>
+                                <span id="quantity-display" class="text-6xl font-black w-24 text-center">1</span>
+                                <button id="increase-qty" 
+                                        class="quantity-btn bg-gray-100 hover:bg-gray-200 text-3xl font-black">+</button>
+                            </div>
+                            
+                            <!-- Quick Quantity -->
+                            <div class="flex gap-3">
+                                <button class="quick-qty-btn px-5 py-3 bg-gray-100 rounded-2xl hover:bg-gray-200 text-sm font-bold uppercase" data-qty="1">Single</button>
+                                <button class="quick-qty-btn px-5 py-3 bg-gray-100 rounded-2xl hover:bg-gray-200 text-sm font-bold uppercase" data-qty="2">Double</button>
+                                <button class="quick-qty-btn px-5 py-3 bg-gray-100 rounded-2xl hover:bg-gray-200 text-sm font-bold uppercase" data-qty="4">Family (4)</button>
+                                <button class="quick-qty-btn px-5 py-3 bg-gray-100 rounded-2xl hover:bg-gray-200 text-sm font-bold uppercase" data-qty="8">Party (8)</button>
+                            </div>
+                            
+                            <p id="quantity-info" class="text-center text-gray-500 text-sm font-medium"></p>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Total & Add to Cart -->
-            <div id="cart-section" class="bg-gradient-to-r from-green-500 to-emerald-600 rounded-3xl shadow-lg p-8 hidden">
-                <div class="flex justify-between items-center mb-8">
+            <!-- Price Summary & Actions -->
+            <div class="glass-card rounded-[2.5rem] p-8 border-2 border-gray-100 mb-10">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <!-- Price Breakdown -->
                     <div>
-                        <p class="text-white/80 text-sm">Total Price</p>
-                        <p id="total-price" class="text-5xl font-black text-white">₹0</p>
+                        <h3 class="text-2xl font-black uppercase mb-6">Price Breakdown</h3>
+                        <div class="space-y-4">
+                            <div class="flex justify-between items-center p-4 bg-gray-50 rounded-2xl">
+                                <span class="font-bold text-gray-700">Item Price</span>
+                                <span id="item-price" class="font-black text-gray-900 text-xl">₹0</span>
+                            </div>
+                            <div class="flex justify-between items-center p-4 bg-gray-50 rounded-2xl">
+                                <span class="font-bold text-gray-700">Quantity</span>
+                                <span id="qty-summary" class="font-black text-gray-900 text-xl">1</span>
+                            </div>
+                            <div class="border-t-2 border-gray-200 pt-6">
+                                <div class="flex justify-between items-center p-5 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-2xl">
+                                    <div>
+                                        <p class="font-black text-gray-900 text-xl uppercase">Total Amount</p>
+                                        <p class="text-sm text-green-600">Inclusive of all taxes</p>
+                                    </div>
+                                    <span id="total-price" class="font-black text-green-700 text-4xl">₹0</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="text-right">
-                        <p id="pack-size-display" class="text-white font-bold">Select pack size</p>
-                        <p id="quantity-summary" class="text-white/80">Quantity: 1</p>
+                    
+                    <!-- Action Buttons -->
+                    <div class="flex flex-col justify-center">
+                        <h3 class="text-2xl font-black uppercase mb-6">Next Steps</h3>
+                        
+                        <!-- Add to Cart Button -->
+                        <button id="add-to-cart-btn" 
+                                class="w-full py-5 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-black uppercase rounded-2xl hover:opacity-90 transition-all action-btn text-lg mb-4 disabled:opacity-50 disabled:cursor-not-allowed"
+                                disabled>
+                            <i class="fas fa-cart-plus mr-3"></i>Add to Cart
+                        </button>
+                        
+                        <!-- View Cart Button -->
+                        <a href="https://clean-scripts.github.io/Easygo-Cart/" 
+                           class="w-full py-5 bg-gray-900 text-white font-black uppercase rounded-2xl hover:bg-black transition-all action-btn text-lg mb-4 text-center">
+                            <i class="fas fa-shopping-cart mr-3"></i>View Cart & Continue
+                        </a>
+                        
+                        <!-- Back to Menu -->
+                        <a href="https://clean-scripts.github.io/Easygo-Menu/" 
+                           class="w-full py-4 bg-gray-100 text-gray-700 font-bold uppercase rounded-2xl hover:bg-gray-200 transition-all text-center">
+                            <i class="fas fa-arrow-left mr-3"></i>Back to Menu
+                        </a>
+                        
+                        <p class="text-center text-gray-500 text-xs font-medium mt-6">
+                            🚀 Items auto-save to cart. No extra steps needed!
+                        </p>
                     </div>
                 </div>
-                <div class="flex gap-4">
-                    <button id="update-cart" 
-                            class="flex-1 py-5 bg-white text-green-600 text-xl font-bold rounded-2xl hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed hidden"
-                            disabled>
-                        🔄 Update Cart
-                    </button>
-                    <button id="add-to-cart" 
-                            class="flex-1 py-5 bg-white text-green-600 text-xl font-bold rounded-2xl hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                            disabled>
-                        🛒 Add to Cart
-                    </button>
+            </div>
+            
+            <!-- Cart Items Preview -->
+            <div id="cart-preview" class="hidden">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-2xl font-black uppercase">Your Cart Items</h3>
+                    <a href="https://clean-scripts.github.io/Easygo-Cart/" 
+                       class="text-green-600 font-bold text-sm hover:text-green-700">
+                        View All Items →
+                    </a>
                 </div>
-                <p class="text-white/80 text-sm text-center mt-4">
-                    Changes are saved automatically. Visit cart to review all items.
-                </p>
+                <div id="cart-items-list" class="space-y-3">
+                    <!-- Cart items will be loaded here -->
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Footer -->
-    <footer class="py-8 bg-gray-50 mt-auto border-t border-gray-200">
-        <div class="max-w-4xl mx-auto px-4">
-            <div class="flex flex-col md:flex-row justify-between items-center gap-6">
-                <div class="text-center md:text-left">
-                    <div class="flex items-center justify-center md:justify-start gap-3">
+    <footer class="bg-gray-900 text-white py-8">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-6 md:mb-0">
+                    <div class="flex items-center">
                         <img src="https://raw.githubusercontent.com/Clean-Scripts/EasyGo-Expense-Tracker/refs/heads/main/logo.png" 
-                             class="h-10 w-10 rounded-full border-2 border-white shadow">
+                             class="h-12 w-12 rounded-full bg-white p-1 mr-3">
                         <div>
-                            <h3 class="text-lg font-black uppercase tracking-tight">Easy Go</h3>
-                            <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Freshness & Speed Delivered</p>
+                            <h2 class="text-xl font-bold">Easy Go</h2>
+                            <p class="text-gray-400 text-sm">Freshness & Speed Delivered</p>
                         </div>
                     </div>
-                    <p class="text-[10px] font-medium text-gray-500 mt-4 max-w-md">
-                        MSME | FSSAI | GST Registered • Free Delivery above ₹199 • Serving daily from 5:45 PM to 10:30 PM
-                    </p>
                 </div>
                 
-                <div class="flex flex-col items-center gap-3">
-                    <div class="flex gap-4">
-                        <a href="https://wa.me/917651837322" target="_blank" 
-                           class="bg-green-500 text-white p-3 rounded-2xl shadow-lg hover:bg-green-600 transition-all">
-                            <span class="font-black text-xs uppercase">WhatsApp</span>
-                        </a>
-                        <a href="https://clean-scripts.github.io/Easygo-Cart/" 
-                           class="bg-indigo-500 text-white p-3 rounded-2xl shadow-lg hover:bg-indigo-600 transition-all">
-                            <span class="font-black text-xs uppercase">View Cart</span>
-                        </a>
-                    </div>
-                    <p class="text-[8px] font-bold text-gray-400 uppercase tracking-widest text-center">
-                        © 2024 Easy Go • All Rights Reserved
+                <div class="text-center md:text-right">
+                    <p class="text-gray-400 text-sm mb-2">
+                        © 2024 Easy Go + All Rights Reserved
                     </p>
+                    <p class="text-gray-500 text-xs">
+                        Serving daily from 5:45 PM to 10:30 PM
+                    </p>
+                    <div class="mt-4">
+                        <a href="https://clean-scripts.github.io/Easygo-Menu/" class="text-gray-400 hover:text-white text-sm mr-4">View Menu</a>
+                        <a href="https://clean-scripts.github.io/Easygo-Cart/" class="text-gray-400 hover:text-white text-sm mr-4">View Cart</a>
+                        <a href="#" class="text-gray-400 hover:text-white text-sm">Terms</a>
+                    </div>
                 </div>
             </div>
         </div>
     </footer>
+
+    <!-- Success Toast -->
+    <div id="success-toast" class="fixed top-4 right-4 bg-green-500 text-white p-6 rounded-2xl shadow-2xl z-50 transform translate-x-full transition-transform duration-500 hidden">
+        <div class="flex items-center gap-4">
+            <i class="fas fa-check-circle text-2xl"></i>
+            <div>
+                <p class="font-bold text-lg">✅ Added to Cart!</p>
+                <p class="text-sm opacity-90">Item saved successfully</p>
+            </div>
+        </div>
+    </div>
 
     <script>
         // Get item from URL parameters
@@ -195,7 +284,6 @@
         
         // Item database with corrected pricing
         const items = {
-            // Veg Momos - Steamed
             'veg-momos-steamed': {
                 id: 'veg-momos-steamed',
                 name: 'Veg Momos (Steamed)',
@@ -204,14 +292,13 @@
                 category: 'Hot & Fresh Snacks',
                 hasPieces: true,
                 type: 'steamed',
-                piecePrice: 9,  // ₹9 per piece
+                piecePrice: 9,
                 packPrices: {
-                    'standard': 59,     // 8 pcs = ₹59
-                    'family': 99,       // 16 pcs = ₹99
-                    'xl': 199           // 32 pcs = ₹199
+                    'standard': 59,
+                    'family': 99,
+                    'xl': 199
                 }
             },
-            // Veg Momos - Fried
             'veg-momos-fried': {
                 id: 'veg-momos-fried',
                 name: 'Veg Momos (Fried)',
@@ -220,14 +307,13 @@
                 category: 'Hot & Fresh Snacks',
                 hasPieces: true,
                 type: 'fried',
-                piecePrice: 10,  // ₹10 per piece
+                piecePrice: 10,
                 packPrices: {
-                    'standard': 79,     // 8 pcs = ₹79
-                    'family': 149,      // 16 pcs = ₹149
-                    'xl': 299           // 32 pcs = ₹299
+                    'standard': 79,
+                    'family': 149,
+                    'xl': 299
                 }
             },
-            // Cheese Corn Momos - Steamed
             'cheese-corn-steamed': {
                 id: 'cheese-corn-steamed',
                 name: 'Cheese Corn Momos (Steamed)',
@@ -236,14 +322,13 @@
                 category: 'Hot & Fresh Snacks',
                 hasPieces: true,
                 type: 'steamed',
-                piecePrice: 12,  // ₹12 per piece
+                piecePrice: 12,
                 packPrices: {
-                    'standard': 89,     // 8 pcs = ₹89
-                    'family': 169,      // 16 pcs = ₹169
-                    'xl': 349           // 32 pcs = ₹349
+                    'standard': 89,
+                    'family': 169,
+                    'xl': 349
                 }
             },
-            // Cheese Corn Momos - Fried
             'cheese-corn-fried': {
                 id: 'cheese-corn-fried',
                 name: 'Cheese Corn Momos (Fried)',
@@ -252,14 +337,13 @@
                 category: 'Hot & Fresh Snacks',
                 hasPieces: true,
                 type: 'fried',
-                piecePrice: 15,  // ₹15 per piece
+                piecePrice: 15,
                 packPrices: {
-                    'standard': 99,     // 8 pcs = ₹99
-                    'family': 179,      // 16 pcs = ₹179
-                    'xl': 369           // 32 pcs = ₹369
+                    'standard': 99,
+                    'family': 179,
+                    'xl': 369
                 }
             },
-            // Paneer Momos - Steamed
             'paneer-steamed': {
                 id: 'paneer-steamed',
                 name: 'Paneer Momos (Steamed)',
@@ -268,14 +352,13 @@
                 category: 'Hot & Fresh Snacks',
                 hasPieces: true,
                 type: 'steamed',
-                piecePrice: 12,  // ₹12 per piece
+                piecePrice: 12,
                 packPrices: {
-                    'standard': 79,     // 8 pcs = ₹79
-                    'family': 149,      // 16 pcs = ₹149
-                    'xl': 299           // 32 pcs = ₹299
+                    'standard': 79,
+                    'family': 149,
+                    'xl': 299
                 }
             },
-            // Paneer Momos - Fried
             'paneer-fried': {
                 id: 'paneer-fried',
                 name: 'Paneer Momos (Fried)',
@@ -284,14 +367,13 @@
                 category: 'Hot & Fresh Snacks',
                 hasPieces: true,
                 type: 'fried',
-                piecePrice: 15,  // ₹15 per piece
+                piecePrice: 15,
                 packPrices: {
-                    'standard': 89,     // 8 pcs = ₹89
-                    'family': 169,      // 16 pcs = ₹169
-                    'xl': 329           // 32 pcs = ₹329
+                    'standard': 89,
+                    'family': 169,
+                    'xl': 329
                 }
             },
-            // Mini Samosas
             'mini-samosas': {
                 id: 'mini-samosas',
                 name: 'Mini Samosas',
@@ -300,14 +382,13 @@
                 category: 'Hot & Fresh Snacks',
                 hasPieces: true,
                 type: 'standard',
-                piecePrice: 10,  // ₹10 per piece
+                piecePrice: 10,
                 packPrices: {
-                    'standard': 69,     // 8 pcs = ₹69
-                    'family': 149,      // 16 pcs = ₹149
-                    'xl': 259           // 32 pcs = ₹259
+                    'standard': 69,
+                    'family': 149,
+                    'xl': 259
                 }
             },
-            // French Fries
             'french-fries': {
                 id: 'french-fries',
                 name: 'French Fries',
@@ -323,110 +404,12 @@
             }
         };
 
-        // Current item and state
+        // Current state
         let currentItem = null;
         let quantity = 1;
         let selectedPack = null;
         let isPiecePack = false;
-        let existingCartItem = null;
-        let isUpdatingExisting = false;
-
-        // Cart management functions
-        function loadCart() {
-            try {
-                const cartData = localStorage.getItem('easygo-cart');
-                return cartData ? JSON.parse(cartData) : [];
-            } catch (error) {
-                console.error('Error loading cart:', error);
-                return [];
-            }
-        }
-
-        function saveCart(cart) {
-            try {
-                localStorage.setItem('easygo-cart', JSON.stringify(cart));
-                updateCartSummary();
-            } catch (error) {
-                console.error('Error saving cart:', error);
-            }
-        }
-
-        function updateCartSummary() {
-            const cart = loadCart();
-            const cartSummary = document.getElementById('cart-summary');
-            const cartCount = document.getElementById('cart-count');
-            
-            if (cart.length > 0) {
-                const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-                cartCount.textContent = totalItems;
-                cartSummary.classList.remove('hidden');
-            } else {
-                cartSummary.classList.add('hidden');
-            }
-        }
-
-        function checkIfItemInCart() {
-            if (!currentItem || !selectedPack) return null;
-            
-            const cart = loadCart();
-            const itemKey = `${currentItem.id}-${selectedPack}`;
-            
-            return cart.find(item => item.id === itemKey) || null;
-        }
-
-        // Quantity button handlers
-        function setupQuantityButtons() {
-            // Increase quantity
-            document.getElementById('increase-qty').onclick = () => {
-                if (!selectedPack) return;
-                
-                let maxQuantity = 99;
-                
-                if (quantity < maxQuantity) {
-                    quantity++;
-                    document.getElementById('quantity-display').textContent = quantity;
-                    
-                    if (quantity > 1) {
-                        document.getElementById('decrease-qty').disabled = false;
-                    }
-                    
-                    updateTotal();
-                }
-            };
-
-            // Decrease quantity
-            document.getElementById('decrease-qty').onclick = () => {
-                if (quantity > 1) {
-                    quantity--;
-                    document.getElementById('quantity-display').textContent = quantity;
-                    
-                    if (quantity === 1) {
-                        document.getElementById('decrease-qty').disabled = true;
-                    }
-                    
-                    updateTotal();
-                }
-            };
-
-            // Quick quantity buttons
-            document.querySelectorAll('.quick-qty-btn').forEach(btn => {
-                btn.onclick = () => {
-                    if (!selectedPack) return;
-                    
-                    const newQty = parseInt(btn.dataset.qty);
-                    quantity = newQty;
-                    document.getElementById('quantity-display').textContent = quantity;
-                    
-                    if (quantity > 1) {
-                        document.getElementById('decrease-qty').disabled = false;
-                    } else {
-                        document.getElementById('decrease-qty').disabled = true;
-                    }
-                    
-                    updateTotal();
-                };
-            });
-        }
+        let currentPrice = 0;
 
         // Initialize page
         function initPage() {
@@ -437,43 +420,25 @@
 
             currentItem = items[itemId];
             loadItemDetails();
-            setupQuantityButtons();
+            setupEventListeners();
             updateCartSummary();
+            loadCartPreview();
         }
 
         // Load item details
         function loadItemDetails() {
-            const container = document.getElementById('item-details');
+            // Update page title
+            document.getElementById('page-title').textContent = currentItem.name;
             
-            container.innerHTML = `
-                <div class="flex flex-col md:flex-row gap-8">
-                    <div class="md:w-1/2 flex items-center justify-center">
-                        <img src="${currentItem.image}" 
-                             alt="${currentItem.name}" 
-                             class="w-full max-w-md h-auto object-contain rounded-3xl shadow-lg">
-                    </div>
-                    <div class="md:w-1/2">
-                        <p class="text-sm font-bold text-green-600 uppercase tracking-widest">${currentItem.category}</p>
-                        <h1 class="text-4xl font-black uppercase mt-2">${currentItem.name}</h1>
-                        <p class="text-gray-600 text-lg mt-4 leading-relaxed">${currentItem.description}</p>
-                        
-                        ${currentItem.hasPieces ? `
-                        <div class="mt-8 p-6 bg-gray-50 rounded-2xl">
-                            <p class="text-sm text-gray-500 mb-2">Price Per Piece</p>
-                            <p class="text-3xl font-bold text-green-600">₹${currentItem.piecePrice}/piece</p>
-                            <p class="text-sm text-gray-500 mt-2">8 Pieces = ₹${currentItem.packPrices.standard}</p>
-                        </div>
-                        ` : ''}
-                    </div>
-                </div>
-            `;
+            // Update item info
+            document.getElementById('item-name').textContent = currentItem.name;
+            document.getElementById('item-category').textContent = currentItem.category;
+            document.getElementById('item-description').textContent = currentItem.description;
+            document.getElementById('item-image').src = currentItem.image;
+            document.getElementById('item-image').alt = currentItem.name;
             
+            // Load pack options
             loadPackOptions();
-            
-            // Show sections
-            document.getElementById('pack-selector').classList.remove('hidden');
-            document.getElementById('quantity-selector').classList.remove('hidden');
-            document.getElementById('cart-section').classList.remove('hidden');
         }
 
         // Load pack options
@@ -482,336 +447,293 @@
             
             if (currentItem.hasPieces) {
                 container.innerHTML = `
-                    <div class="pack-option border-2 border-gray-200 rounded-2xl p-4 text-center cursor-pointer hover:border-green-300"
-                         data-pack="piece" data-price="${currentItem.piecePrice}" data-pieces="1">
-                        <p class="font-bold text-lg">Per Piece</p>
-                        <p class="text-gray-600 text-sm">Individual</p>
-                        <p class="text-green-600 font-bold mt-2">₹${currentItem.piecePrice}/piece</p>
+                    <div class="pack-option border-2 border-gray-200 rounded-2xl p-5 text-center cursor-pointer hover:border-green-300"
+                         data-pack="piece" data-price="${currentItem.piecePrice}">
+                        <p class="font-black text-lg uppercase mb-2">Per Piece</p>
+                        <p class="text-gray-600 text-sm mb-3">Individual piece</p>
+                        <p class="text-green-600 font-black text-2xl">₹${currentItem.piecePrice}/pc</p>
+                        <p class="text-xs text-gray-500 mt-3">8 pieces = ₹${currentItem.packPrices.standard}</p>
                     </div>
-                    <div class="pack-option border-2 border-gray-200 rounded-2xl p-4 text-center cursor-pointer hover:border-green-300"
-                         data-pack="standard" data-price="${currentItem.packPrices.standard}" data-pieces="8">
-                        <p class="font-bold text-lg">Standard</p>
-                        <p class="text-gray-600 text-sm">8 Pieces</p>
-                        <p class="text-green-600 font-bold mt-2">₹${currentItem.packPrices.standard}</p>
+                    <div class="pack-option border-2 border-gray-200 rounded-2xl p-5 text-center cursor-pointer hover:border-green-300"
+                         data-pack="standard" data-price="${currentItem.packPrices.standard}">
+                        <p class="font-black text-lg uppercase mb-2">Standard Pack</p>
+                        <p class="text-gray-600 text-sm mb-3">8 Pieces</p>
+                        <p class="text-green-600 font-black text-2xl">₹${currentItem.packPrices.standard}</p>
+                        <p class="text-xs text-gray-500 mt-3">₹${(currentItem.packPrices.standard/8).toFixed(1)}/pc</p>
                     </div>
-                    <div class="pack-option border-2 border-gray-200 rounded-2xl p-4 text-center cursor-pointer hover:border-green-300"
-                         data-pack="family" data-price="${currentItem.packPrices.family}" data-pieces="16">
-                        <p class="font-bold text-lg">Family Pack</p>
-                        <p class="text-gray-600 text-sm">16 Pieces</p>
-                        <p class="text-green-600 font-bold mt-2">₹${currentItem.packPrices.family}</p>
+                    <div class="pack-option border-2 border-gray-200 rounded-2xl p-5 text-center cursor-pointer hover:border-green-300"
+                         data-pack="family" data-price="${currentItem.packPrices.family}">
+                        <p class="font-black text-lg uppercase mb-2">Family Pack</p>
+                        <p class="text-gray-600 text-sm mb-3">16 Pieces</p>
+                        <p class="text-green-600 font-black text-2xl">₹${currentItem.packPrices.family}</p>
+                        <p class="text-xs text-gray-500 mt-3">₹${(currentItem.packPrices.family/16).toFixed(1)}/pc</p>
                     </div>
-                    <div class="pack-option border-2 border-gray-200 rounded-2xl p-4 text-center cursor-pointer hover:border-green-300"
-                         data-pack="xl" data-price="${currentItem.packPrices.xl}" data-pieces="32">
-                        <p class="font-bold text-lg">Extra Large</p>
-                        <p class="text-gray-600 text-sm">32 Pieces</p>
-                        <p class="text-green-600 font-bold mt-2">₹${currentItem.packPrices.xl}</p>
+                    <div class="pack-option border-2 border-gray-200 rounded-2xl p-5 text-center cursor-pointer hover:border-green-300"
+                         data-pack="xl" data-price="${currentItem.packPrices.xl}">
+                        <p class="font-black text-lg uppercase mb-2">Party Pack</p>
+                        <p class="text-gray-600 text-sm mb-3">32 Pieces</p>
+                        <p class="text-green-600 font-black text-2xl">₹${currentItem.packPrices.xl}</p>
+                        <p class="text-xs text-gray-500 mt-3">₹${(currentItem.packPrices.xl/32).toFixed(1)}/pc</p>
                     </div>
                 `;
             } else {
                 container.innerHTML = `
-                    <div class="pack-option border-2 border-gray-200 rounded-2xl p-4 text-center cursor-pointer hover:border-green-300"
-                         data-pack="standard" data-price="${currentItem.packs.standard.price}" data-weight="${currentItem.packs.standard.weight}">
-                        <p class="font-bold text-lg">Standard</p>
-                        <p class="text-gray-600 text-sm">${currentItem.packs.standard.weight}</p>
-                        <p class="text-green-600 font-bold mt-2">₹${currentItem.packs.standard.price}</p>
+                    <div class="pack-option border-2 border-gray-200 rounded-2xl p-5 text-center cursor-pointer hover:border-green-300"
+                         data-pack="standard" data-price="${currentItem.packs.standard.price}">
+                        <p class="font-black text-lg uppercase mb-2">Standard</p>
+                        <p class="text-gray-600 text-sm mb-3">${currentItem.packs.standard.weight}</p>
+                        <p class="text-green-600 font-black text-2xl">₹${currentItem.packs.standard.price}</p>
+                        <p class="text-xs text-gray-500 mt-3">Perfect for one</p>
                     </div>
-                    <div class="pack-option border-2 border-gray-200 rounded-2xl p-4 text-center cursor-pointer hover:border-green-300"
-                         data-pack="family" data-price="${currentItem.packs.family.price}" data-weight="${currentItem.packs.family.weight}">
-                        <p class="font-bold text-lg">Family Pack</p>
-                        <p class="text-gray-600 text-sm">${currentItem.packs.family.weight}</p>
-                        <p class="text-green-600 font-bold mt-2">₹${currentItem.packs.family.price}</p>
+                    <div class="pack-option border-2 border-gray-200 rounded-2xl p-5 text-center cursor-pointer hover:border-green-300"
+                         data-pack="family" data-price="${currentItem.packs.family.price}">
+                        <p class="font-black text-lg uppercase mb-2">Family Pack</p>
+                        <p class="text-gray-600 text-sm mb-3">${currentItem.packs.family.weight}</p>
+                        <p class="text-green-600 font-black text-2xl">₹${currentItem.packs.family.price}</p>
+                        <p class="text-xs text-gray-500 mt-3">For 2-3 people</p>
                     </div>
-                    <div class="pack-option border-2 border-gray-200 rounded-2xl p-4 text-center cursor-pointer hover:border-green-300"
-                         data-pack="xl" data-price="${currentItem.packs.xl.price}" data-weight="${currentItem.packs.xl.weight}">
-                        <p class="font-bold text-lg">Extra Large</p>
-                        <p class="text-gray-600 text-sm">${currentItem.packs.xl.weight}</p>
-                        <p class="text-green-600 font-bold mt-2">₹${currentItem.packs.xl.price}</p>
+                    <div class="pack-option border-2 border-gray-200 rounded-2xl p-5 text-center cursor-pointer hover:border-green-300"
+                         data-pack="xl" data-price="${currentItem.packs.xl.price}">
+                        <p class="font-black text-lg uppercase mb-2">Party Pack</p>
+                        <p class="text-gray-600 text-sm mb-3">${currentItem.packs.xl.weight}</p>
+                        <p class="text-green-600 font-black text-2xl">₹${currentItem.packs.xl.price}</p>
+                        <p class="text-xs text-gray-500 mt-3">For gatherings</p>
                     </div>
-                    <div class="border-2 border-gray-100 rounded-2xl p-4 text-center opacity-50 cursor-not-allowed">
-                        <p class="font-bold text-lg text-gray-400">Per Piece</p>
-                        <p class="text-gray-400 text-sm">Not Available</p>
-                        <p class="text-gray-400 font-bold mt-2">-</p>
+                    <div class="border-2 border-gray-100 rounded-2xl p-5 text-center opacity-50 cursor-not-allowed">
+                        <p class="font-black text-lg text-gray-400 uppercase mb-2">Per Piece</p>
+                        <p class="text-gray-400 text-sm mb-3">Not Available</p>
+                        <p class="text-gray-400 font-black text-2xl">-</p>
                     </div>
                 `;
             }
             
-            // Add click handlers to pack options
-            document.querySelectorAll('.pack-option').forEach(option => {
+            // Add click handlers
+            document.querySelectorAll('.pack-option:not(.cursor-not-allowed)').forEach(option => {
                 option.onclick = function() {
                     // Remove selected class from all
                     document.querySelectorAll('.pack-option').forEach(opt => {
-                        opt.classList.remove('selected', 'border-green-500', 'bg-green-50');
-                        opt.classList.add('border-gray-200');
+                        opt.classList.remove('selected');
                     });
                     
                     // Add to clicked
-                    this.classList.add('selected', 'border-green-500', 'bg-green-50');
-                    this.classList.remove('border-gray-200');
+                    this.classList.add('selected');
                     
                     // Update selection
                     selectedPack = this.dataset.pack;
                     isPiecePack = (selectedPack === 'piece');
+                    currentPrice = parseFloat(this.dataset.price);
                     
-                    // Check if this item already exists in cart
-                    existingCartItem = checkIfItemInCart();
-                    isUpdatingExisting = existingCartItem !== null;
+                    // Enable add to cart button
+                    document.getElementById('add-to-cart-btn').disabled = false;
                     
-                    // Set quantity based on existing cart item or default
-                    quantity = existingCartItem ? existingCartItem.quantity : 1;
-                    document.getElementById('quantity-display').textContent = quantity;
-                    
-                    // Show/hide appropriate buttons
-                    const deleteBtn = document.getElementById('delete-item');
-                    const updateBtn = document.getElementById('update-cart');
-                    const addBtn = document.getElementById('add-to-cart');
-                    
-                    if (isUpdatingExisting) {
-                        deleteBtn.classList.remove('hidden');
-                        updateBtn.classList.remove('hidden');
-                        addBtn.classList.add('hidden');
-                    } else {
-                        deleteBtn.classList.add('hidden');
-                        updateBtn.classList.add('hidden');
-                        addBtn.classList.remove('hidden');
-                    }
-                    
-                    // Enable/disable quantity buttons
-                    const decreaseBtn = document.getElementById('decrease-qty');
-                    
-                    decreaseBtn.disabled = quantity <= 1;
-                    document.getElementById('increase-qty').disabled = false;
-                    
-                    // Enable cart buttons
-                    updateBtn.disabled = false;
-                    addBtn.disabled = false;
-                    
-                    // Setup cart button handlers
-                    setupCartButtons();
-                    
-                    // Update display and total
-                    updatePackDisplay();
-                    updateTotal();
+                    // Update display
+                    updateDisplay();
                 };
             });
             
-            // Check if any pack should be pre-selected based on existing cart item
-            const cart = loadCart();
-            for (const item of cart) {
-                if (item.itemId === currentItem.id) {
-                    const packToSelect = document.querySelector(`.pack-option[data-pack="${item.pack}"]`);
-                    if (packToSelect) {
-                        setTimeout(() => {
-                            packToSelect.click();
-                        }, 100);
-                    }
-                    break;
+            // Auto-select first pack
+            setTimeout(() => {
+                const firstPack = document.querySelector('.pack-option:not(.cursor-not-allowed)');
+                if (firstPack) {
+                    firstPack.click();
                 }
-            }
+            }, 100);
         }
 
-        // Setup cart button handlers
-        function setupCartButtons() {
-            // Delete button
-            document.getElementById('delete-item').onclick = () => {
-                if (!isUpdatingExisting || !existingCartItem) return;
-                
-                if (confirm(`Are you sure you want to remove "${currentItem.name}" from your cart?`)) {
-                    const cart = loadCart();
-                    const itemKey = `${currentItem.id}-${selectedPack}`;
-                    
-                    // Remove the item
-                    const updatedCart = cart.filter(item => item.id !== itemKey);
-                    saveCart(updatedCart);
-                    
-                    // Reset state
-                    existingCartItem = null;
-                    isUpdatingExisting = false;
-                    quantity = 1;
-                    document.getElementById('quantity-display').textContent = quantity;
-                    
-                    // Update UI
-                    document.getElementById('delete-item').classList.add('hidden');
-                    document.getElementById('update-cart').classList.add('hidden');
-                    document.getElementById('add-to-cart').classList.remove('hidden');
-                    
-                    // Update cart summary
-                    updateCartSummary();
-                    
-                    // Show success message
-                    alert(`✅ Item removed from cart!`);
-                    
-                    updateTotal();
+        // Setup event listeners
+        function setupEventListeners() {
+            // Quantity buttons
+            document.getElementById('increase-qty').onclick = () => {
+                quantity++;
+                updateDisplay();
+            };
+
+            document.getElementById('decrease-qty').onclick = () => {
+                if (quantity > 1) {
+                    quantity--;
+                    updateDisplay();
                 }
             };
 
-            // Update cart button
-            document.getElementById('update-cart').onclick = () => {
-                saveItemToCart();
-            };
+            // Quick quantity buttons
+            document.querySelectorAll('.quick-qty-btn').forEach(btn => {
+                btn.onclick = () => {
+                    quantity = parseInt(btn.dataset.qty);
+                    updateDisplay();
+                };
+            });
 
             // Add to cart button
-            document.getElementById('add-to-cart').onclick = () => {
-                saveItemToCart();
-            };
+            document.getElementById('add-to-cart-btn').onclick = addToCart;
         }
 
-        // Update pack display info
-        function updatePackDisplay() {
-            const packDisplay = document.getElementById('pack-size-display');
-            const quantityInfo = document.getElementById('quantity-info');
+        // Update display
+        function updateDisplay() {
+            // Update quantity display
+            document.getElementById('quantity-display').textContent = quantity;
+            document.getElementById('qty-summary').textContent = quantity;
             
-            if (currentItem.hasPieces) {
-                const packNames = {
-                    'piece': 'Per Piece',
-                    'standard': 'Standard Pack',
-                    'family': 'Family Pack',
-                    'xl': 'Extra Large Pack'
-                };
-                
-                const packPieces = {
-                    'piece': '1 piece',
-                    'standard': '8 pieces',
-                    'family': '16 pieces',
-                    'xl': '32 pieces'
-                };
-                
-                packDisplay.textContent = `${packNames[selectedPack]} (${packPieces[selectedPack]})`;
-                
-                if (isPiecePack) {
-                    const totalPieces = quantity;
-                    const fullPlates = Math.floor(totalPieces / 8);
-                    const remainingPieces = totalPieces % 8;
-                    
-                    let infoText = `${totalPieces} piece${totalPieces !== 1 ? 's' : ''}`;
-                    if (fullPlates > 0) {
-                        infoText += ` = ${fullPlates} plate${fullPlates !== 1 ? 's' : ''}`;
-                        if (remainingPieces > 0) {
-                            infoText += ` + ${remainingPieces} piece${remainingPieces !== 1 ? 's' : ''}`;
-                        }
-                    }
-                    quantityInfo.textContent = infoText;
-                } else {
-                    const selectedOption = document.querySelector(`.pack-option[data-pack="${selectedPack}"]`);
-                    const pieces = selectedOption.dataset.pieces;
-                    quantityInfo.textContent = `${quantity} pack${quantity !== 1 ? 's' : ''} × ${pieces} pieces = ${quantity * parseInt(pieces)} pieces total`;
-                }
+            // Enable/disable decrease button
+            document.getElementById('decrease-qty').disabled = quantity <= 1;
+            
+            // Calculate price
+            let itemPrice = currentPrice;
+            let totalPrice = itemPrice * quantity;
+            
+            // Update price displays
+            document.getElementById('item-price').textContent = `₹${itemPrice}`;
+            document.getElementById('total-price').textContent = `₹${totalPrice}`;
+            
+            // Update quantity info
+            updateQuantityInfo();
+        }
+
+        // Update quantity info
+        function updateQuantityInfo() {
+            const infoElement = document.getElementById('quantity-info');
+            
+            if (!selectedPack) {
+                infoElement.textContent = '';
+                return;
+            }
+            
+            if (currentItem.hasPieces && !isPiecePack) {
+                const pieces = selectedPack === 'standard' ? 8 : 
+                              selectedPack === 'family' ? 16 : 32;
+                const totalPieces = pieces * quantity;
+                infoElement.textContent = `${quantity} pack${quantity !== 1 ? 's' : ''} × ${pieces} pieces = ${totalPieces} pieces total`;
+            } else if (currentItem.hasPieces && isPiecePack) {
+                infoElement.textContent = `${quantity} piece${quantity !== 1 ? 's' : ''}`;
             } else {
-                // French fries
-                const selectedOption = document.querySelector(`.pack-option[data-pack="${selectedPack}"]`);
-                const weight = selectedOption.dataset.weight;
-                packDisplay.textContent = `${selectedPack.charAt(0).toUpperCase() + selectedPack.slice(1)} Pack (${weight})`;
-                quantityInfo.textContent = `${quantity} pack${quantity !== 1 ? 's' : ''} × ${weight}`;
+                const pack = currentItem.packs[selectedPack];
+                infoElement.textContent = `${quantity} × ${pack.weight}`;
             }
-            
-            document.getElementById('quantity-summary').textContent = `Quantity: ${quantity}`;
         }
 
-        // Update total price
-        function updateTotal() {
-            let total = 0;
-            
-            if (selectedPack) {
-                const selectedOption = document.querySelector(`.pack-option[data-pack="${selectedPack}"]`);
-                const packPrice = parseFloat(selectedOption.dataset.price);
-                
-                if (isPiecePack) {
-                    // Calculate piece price total
-                    total = currentItem.piecePrice * quantity;
-                } else {
-                    total = packPrice * quantity;
-                }
-            }
-            
-            document.getElementById('total-price').textContent = `₹${Math.floor(total)}`;
-            updatePackDisplay();
-        }
-
-        // Save item to cart
-        function saveItemToCart() {
+        // Add to cart
+        function addToCart() {
             if (!selectedPack) return;
             
-            const selectedOption = document.querySelector(`.pack-option[data-pack="${selectedPack}"]`);
-            const packPrice = parseFloat(selectedOption.dataset.price);
+            // Get cart
+            let cart = JSON.parse(localStorage.getItem('easygo-cart') || '[]');
             
-            let itemName = currentItem.name;
-            let itemDescription = '';
-            let unitPrice = 0;
+            // Calculate total pieces/weight
+            let description = '';
             let totalPieces = 0;
             
             if (currentItem.hasPieces) {
                 if (isPiecePack) {
-                    itemDescription = `${quantity} piece${quantity !== 1 ? 's' : ''}`;
-                    unitPrice = currentItem.piecePrice;
+                    description = `${quantity} piece${quantity !== 1 ? 's' : ''}`;
                     totalPieces = quantity;
                 } else {
-                    const pieces = parseInt(selectedOption.dataset.pieces);
-                    itemDescription = `${quantity} pack${quantity !== 1 ? 's' : ''} (${pieces} pieces each)`;
-                    unitPrice = packPrice;
-                    totalPieces = quantity * pieces;
+                    const pieces = selectedPack === 'standard' ? 8 : 
+                                  selectedPack === 'family' ? 16 : 32;
+                    description = `${quantity} pack${quantity !== 1 ? 's' : ''} (${pieces} pieces each)`;
+                    totalPieces = pieces * quantity;
                 }
             } else {
-                const weight = selectedOption.dataset.weight;
-                itemDescription = `${quantity} pack${quantity !== 1 ? 's' : ''} (${weight} each)`;
-                unitPrice = packPrice;
+                const pack = currentItem.packs[selectedPack];
+                description = `${quantity} × ${pack.weight}`;
+                totalPieces = 0;
             }
             
+            // Create cart item
             const cartItem = {
                 id: `${currentItem.id}-${selectedPack}`,
                 itemId: currentItem.id,
-                name: itemName,
-                description: itemDescription,
+                name: currentItem.name,
+                description: description,
                 image: currentItem.image,
                 pack: selectedPack,
                 isPiecePack: isPiecePack,
-                unitPrice: unitPrice,
+                unitPrice: currentPrice,
                 quantity: quantity,
-                totalPrice: Math.floor(parseFloat(document.getElementById('total-price').textContent.replace('₹', ''))),
+                totalPrice: currentPrice * quantity,
                 totalPieces: totalPieces,
                 timestamp: new Date().toISOString()
             };
-
-            const cart = loadCart();
+            
+            // Check if item already exists
             const existingIndex = cart.findIndex(item => item.id === cartItem.id);
             
             if (existingIndex > -1) {
+                // Update existing item
                 cart[existingIndex] = cartItem;
             } else {
+                // Add new item
                 cart.push(cartItem);
             }
             
-            saveCart(cart);
-            existingCartItem = cartItem;
-            isUpdatingExisting = true;
-            
-            // Update UI
-            document.getElementById('delete-item').classList.remove('hidden');
-            document.getElementById('update-cart').classList.remove('hidden');
-            document.getElementById('add-to-cart').classList.add('hidden');
+            // Save cart
+            localStorage.setItem('easygo-cart', JSON.stringify(cart));
             
             // Show success message
-            const action = existingIndex > -1 ? 'updated' : 'added';
-            alert(`✅ Item ${action} to cart!\n${quantity} × ${itemName}\nTotal: ₹${cartItem.totalPrice}`);
+            showSuccessToast();
             
+            // Update cart summary
             updateCartSummary();
+            loadCartPreview();
+        }
+
+        // Show success toast
+        function showSuccessToast() {
+            const toast = document.getElementById('success-toast');
+            toast.classList.remove('hidden');
+            toast.classList.remove('translate-x-full');
+            
+            setTimeout(() => {
+                toast.classList.add('translate-x-full');
+                setTimeout(() => {
+                    toast.classList.add('hidden');
+                }, 500);
+            }, 3000);
+        }
+
+        // Update cart summary
+        function updateCartSummary() {
+            const cart = JSON.parse(localStorage.getItem('easygo-cart') || '[]');
+            const cartSummary = document.getElementById('cart-summary');
+            
+            if (cart.length > 0) {
+                const totalAmount = cart.reduce((sum, item) => sum + item.totalPrice, 0);
+                document.getElementById('cart-total').textContent = `₹${totalAmount}`;
+                cartSummary.classList.remove('hidden');
+            } else {
+                cartSummary.classList.add('hidden');
+            }
+        }
+
+        // Load cart preview
+        function loadCartPreview() {
+            const cart = JSON.parse(localStorage.getItem('easygo-cart') || '[]');
+            const cartPreview = document.getElementById('cart-preview');
+            const cartList = document.getElementById('cart-items-list');
+            
+            if (cart.length > 0) {
+                cartList.innerHTML = cart.map(item => `
+                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-2xl">
+                        <div class="flex items-center gap-4">
+                            <img src="${item.image}" alt="${item.name}" class="w-12 h-12 rounded-xl object-cover">
+                            <div>
+                                <p class="font-bold">${item.name}</p>
+                                <p class="text-sm text-gray-500">${item.description}</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-black">₹${item.totalPrice}</p>
+                            <p class="text-sm text-gray-500">${item.quantity} × ₹${item.unitPrice}</p>
+                        </div>
+                    </div>
+                `).join('');
+                
+                cartPreview.classList.remove('hidden');
+            } else {
+                cartPreview.classList.add('hidden');
+            }
         }
 
         // Initialize on load
         window.addEventListener('DOMContentLoaded', initPage);
-        
-        // Check cart expiry on load
-        function checkCartExpiry() {
-            const expiry = localStorage.getItem('easygo-cart-expiry');
-            if (expiry) {
-                const expiryDate = new Date(expiry);
-                if (new Date() > expiryDate) {
-                    localStorage.removeItem('easygo-cart');
-                    localStorage.removeItem('easygo-cart-expiry');
-                    console.log('Cart expired and cleared');
-                }
-            }
-        }
-        
-        checkCartExpiry();
     </script>
 </body>
 </html>

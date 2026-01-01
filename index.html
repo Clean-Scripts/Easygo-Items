@@ -325,6 +325,70 @@
             return cart.find(item => item.id === itemKey) || null;
         }
 
+        // Quantity button handlers
+        function setupQuantityButtons() {
+            // Increase quantity
+            document.getElementById('increase-qty').onclick = () => {
+                if (!selectedPack) return;
+                
+                let maxQuantity = 99;
+                
+                if (currentItem.hasPieces) {
+                    if (isPiecePack) {
+                        maxQuantity = 99;
+                    } else {
+                        maxQuantity = 99;
+                    }
+                } else {
+                    maxQuantity = 99;
+                }
+                
+                if (quantity < maxQuantity) {
+                    quantity++;
+                    document.getElementById('quantity-display').textContent = quantity;
+                    
+                    if (quantity > 1) {
+                        document.getElementById('decrease-qty').disabled = false;
+                    }
+                    
+                    updateTotal();
+                }
+            };
+
+            // Decrease quantity
+            document.getElementById('decrease-qty').onclick = () => {
+                if (quantity > 1) {
+                    quantity--;
+                    document.getElementById('quantity-display').textContent = quantity;
+                    
+                    if (quantity === 1) {
+                        document.getElementById('decrease-qty').disabled = true;
+                    }
+                    
+                    updateTotal();
+                }
+            };
+
+            // Quick quantity buttons
+            document.querySelectorAll('.quick-qty-btn').forEach(btn => {
+                btn.onclick = () => {
+                    if (!selectedPack) return;
+                    
+                    const newQty = parseInt(btn.dataset.qty);
+                    quantity = newQty;
+                    document.getElementById('quantity-display').textContent = quantity;
+                    
+                    if (quantity > 1) {
+                        document.getElementById('decrease-qty').disabled = false;
+                    } else {
+                        document.getElementById('decrease-qty').disabled = true;
+                    }
+                    
+                    updateTotal();
+                };
+            });
+        }
+
         // Initialize page
         function initPage() {
             if (!itemId || !items[itemId]) {
@@ -334,8 +398,8 @@
 
             currentItem = items[itemId];
             loadItemDetails();
-            setupEventListeners();
-            updateCartSummary(); // Show cart summary on load
+            setupQuantityButtons(); // Setup quantity buttons here
+            updateCartSummary();
         }
 
         // Load item details
@@ -344,7 +408,7 @@
             
             // Calculate piece price if applicable
             if (currentItem.hasPieces) {
-                piecePrice = Math.floor(currentItem.basePrice / 8); // Floor value for per piece
+                piecePrice = Math.floor(currentItem.basePrice / 8);
             }
             
             container.innerHTML = `
@@ -370,7 +434,6 @@
                 </div>
             `;
             
-            // Load pack options
             loadPackOptions();
             
             // Show sections
@@ -411,7 +474,6 @@
                     </div>
                 `;
             } else {
-                // French fries special packs
                 container.innerHTML = `
                     <div class="pack-option border-2 border-gray-200 rounded-2xl p-4 text-center cursor-pointer hover:border-green-300"
                          data-pack="standard" data-price="${currentItem.packs.standard.price}" data-weight="${currentItem.packs.standard.weight}">
@@ -441,7 +503,7 @@
             
             // Add click handlers to pack options
             document.querySelectorAll('.pack-option').forEach(option => {
-                option.addEventListener('click', () => {
+                option.onclick = function() {
                     // Remove selected class from all
                     document.querySelectorAll('.pack-option').forEach(opt => {
                         opt.classList.remove('selected', 'border-green-500', 'bg-green-50');
@@ -449,11 +511,11 @@
                     });
                     
                     // Add to clicked
-                    option.classList.add('selected', 'border-green-500', 'bg-green-50');
-                    option.classList.remove('border-gray-200');
+                    this.classList.add('selected', 'border-green-500', 'bg-green-50');
+                    this.classList.remove('border-gray-200');
                     
                     // Update selection
-                    selectedPack = option.dataset.pack;
+                    selectedPack = this.dataset.pack;
                     isPiecePack = (selectedPack === 'piece');
                     
                     // Check if this item already exists in cart
@@ -481,39 +543,82 @@
                     
                     // Enable/disable quantity buttons
                     const decreaseBtn = document.getElementById('decrease-qty');
-                    const increaseBtn = document.getElementById('increase-qty');
                     
                     decreaseBtn.disabled = quantity <= 1;
-                    if (decreaseBtn.disabled) {
-                        decreaseBtn.classList.add('disabled:opacity-50', 'disabled:cursor-not-allowed');
-                    } else {
-                        decreaseBtn.classList.remove('disabled:opacity-50', 'disabled:cursor-not-allowed');
-                    }
-                    
-                    increaseBtn.disabled = false;
-                    increaseBtn.classList.remove('disabled:opacity-50', 'disabled:cursor-not-allowed');
+                    document.getElementById('increase-qty').disabled = false;
                     
                     // Enable cart buttons
                     updateBtn.disabled = false;
-                    updateBtn.classList.remove('disabled:opacity-50', 'disabled:cursor-not-allowed');
                     addBtn.disabled = false;
-                    addBtn.classList.remove('disabled:opacity-50', 'disabled:cursor-not-allowed');
+                    
+                    // Setup cart button handlers
+                    setupCartButtons();
                     
                     // Update display and total
                     updatePackDisplay();
                     updateTotal();
-                });
+                };
             });
             
             // Check if any pack should be pre-selected based on existing cart item
-            if (existingCartItem) {
-                const packToSelect = document.querySelector(`.pack-option[data-pack="${existingCartItem.pack}"]`);
-                if (packToSelect) {
-                    setTimeout(() => {
-                        packToSelect.click();
-                    }, 100);
+            const cart = loadCart();
+            for (const item of cart) {
+                if (item.itemId === currentItem.id) {
+                    const packToSelect = document.querySelector(`.pack-option[data-pack="${item.pack}"]`);
+                    if (packToSelect) {
+                        setTimeout(() => {
+                            packToSelect.click();
+                        }, 100);
+                    }
+                    break;
                 }
             }
+        }
+
+        // Setup cart button handlers
+        function setupCartButtons() {
+            // Delete button
+            document.getElementById('delete-item').onclick = () => {
+                if (!isUpdatingExisting || !existingCartItem) return;
+                
+                if (confirm(`Are you sure you want to remove "${currentItem.name}" from your cart?`)) {
+                    const cart = loadCart();
+                    const itemKey = `${currentItem.id}-${selectedPack}`;
+                    
+                    // Remove the item
+                    const updatedCart = cart.filter(item => item.id !== itemKey);
+                    saveCart(updatedCart);
+                    
+                    // Reset state
+                    existingCartItem = null;
+                    isUpdatingExisting = false;
+                    quantity = 1;
+                    document.getElementById('quantity-display').textContent = quantity;
+                    
+                    // Update UI
+                    document.getElementById('delete-item').classList.add('hidden');
+                    document.getElementById('update-cart').classList.add('hidden');
+                    document.getElementById('add-to-cart').classList.remove('hidden');
+                    
+                    // Update cart summary
+                    updateCartSummary();
+                    
+                    // Show success message
+                    alert(`✅ Item removed from cart!`);
+                    
+                    updateTotal();
+                }
+            };
+
+            // Update cart button
+            document.getElementById('update-cart').onclick = () => {
+                saveItemToCart();
+            };
+
+            // Add to cart button
+            document.getElementById('add-to-cart').onclick = () => {
+                saveItemToCart();
+            };
         }
 
         // Update pack display info
@@ -596,39 +701,6 @@
             updatePackDisplay();
         }
 
-        // Delete item from cart
-        function deleteItemFromCart() {
-            if (!isUpdatingExisting || !existingCartItem) return;
-            
-            if (confirm(`Are you sure you want to remove "${currentItem.name}" from your cart?`)) {
-                const cart = loadCart();
-                const itemKey = `${currentItem.id}-${selectedPack}`;
-                
-                // Remove the item
-                const updatedCart = cart.filter(item => item.id !== itemKey);
-                saveCart(updatedCart);
-                
-                // Reset state
-                existingCartItem = null;
-                isUpdatingExisting = false;
-                quantity = 1;
-                document.getElementById('quantity-display').textContent = quantity;
-                
-                // Update UI
-                document.getElementById('delete-item').classList.add('hidden');
-                document.getElementById('update-cart').classList.add('hidden');
-                document.getElementById('add-to-cart').classList.remove('hidden');
-                
-                // Update cart summary
-                updateCartSummary();
-                
-                // Show success message
-                alert(`✅ Item removed from cart!`);
-                
-                updateTotal();
-            }
-        }
-
         // Save item to cart
         function saveItemToCart() {
             if (!selectedPack) return;
@@ -677,10 +749,8 @@
             const existingIndex = cart.findIndex(item => item.id === cartItem.id);
             
             if (existingIndex > -1) {
-                // Update existing item
                 cart[existingIndex] = cartItem;
             } else {
-                // Add new item
                 cart.push(cartItem);
             }
             
@@ -698,86 +768,6 @@
             alert(`✅ Item ${action} to cart!\n${quantity} × ${itemName}\nTotal: ₹${cartItem.totalPrice}`);
             
             updateCartSummary();
-        }
-
-        // Setup event listeners
-        function setupEventListeners() {
-            // Quantity buttons
-            document.getElementById('increase-qty').addEventListener('click', () => {
-                if (!selectedPack) return;
-                
-                let maxQuantity = 99; // Default max
-                
-                if (currentItem.hasPieces) {
-                    if (isPiecePack) {
-                        maxQuantity = 99; // Allow up to 99 pieces
-                    } else {
-                        maxQuantity = 99; // Allow up to 99 packs
-                    }
-                } else {
-                    maxQuantity = 99; // Allow up to 99 packs for fries
-                }
-                
-                if (quantity < maxQuantity) {
-                    quantity++;
-                    document.getElementById('quantity-display').textContent = quantity;
-                    
-                    // Enable decrease button if quantity > 1
-                    if (quantity > 1) {
-                        document.getElementById('decrease-qty').disabled = false;
-                        document.getElementById('decrease-qty').classList.remove('disabled:opacity-50', 'disabled:cursor-not-allowed');
-                    }
-                    
-                    updateTotal();
-                }
-            });
-
-            document.getElementById('decrease-qty').addEventListener('click', () => {
-                if (quantity > 1) {
-                    quantity--;
-                    document.getElementById('quantity-display').textContent = quantity;
-                    
-                    // Disable decrease button if quantity is 1
-                    if (quantity === 1) {
-                        document.getElementById('decrease-qty').disabled = true;
-                        document.getElementById('decrease-qty').classList.add('disabled:opacity-50', 'disabled:cursor-not-allowed');
-                    }
-                    
-                    updateTotal();
-                }
-            });
-
-            // Quick quantity buttons
-            document.querySelectorAll('.quick-qty-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    if (!selectedPack) return;
-                    
-                    const newQty = parseInt(btn.dataset.qty);
-                    quantity = newQty;
-                    document.getElementById('quantity-display').textContent = quantity;
-                    
-                    // Update decrease button state
-                    const decreaseBtn = document.getElementById('decrease-qty');
-                    if (quantity > 1) {
-                        decreaseBtn.disabled = false;
-                        decreaseBtn.classList.remove('disabled:opacity-50', 'disabled:cursor-not-allowed');
-                    } else {
-                        decreaseBtn.disabled = true;
-                        decreaseBtn.classList.add('disabled:opacity-50', 'disabled:cursor-not-allowed');
-                    }
-                    
-                    updateTotal();
-                });
-            });
-
-            // Delete button
-            document.getElementById('delete-item').addEventListener('click', deleteItemFromCart);
-
-            // Update cart button
-            document.getElementById('update-cart').addEventListener('click', saveItemToCart);
-
-            // Add to cart button
-            document.getElementById('add-to-cart').addEventListener('click', saveItemToCart);
         }
 
         // Initialize on load

@@ -193,71 +193,121 @@
         const urlParams = new URLSearchParams(window.location.search);
         const itemId = urlParams.get('item');
         
-        // Item database
+        // Item database with corrected pricing
         const items = {
+            // Veg Momos - Steamed
             'veg-momos-steamed': {
                 id: 'veg-momos-steamed',
                 name: 'Veg Momos (Steamed)',
                 description: 'Delicious steamed vegetable momos with our special garlic sauce. Perfect healthy snack!',
-                basePrice: 59,
                 image: 'https://raw.githubusercontent.com/Clean-Scripts/Easygo-Menu/refs/heads/main/veg.png',
                 category: 'Hot & Fresh Snacks',
-                hasPieces: true
+                hasPieces: true,
+                type: 'steamed',
+                piecePrice: 9,  // ₹9 per piece
+                packPrices: {
+                    'standard': 59,     // 8 pcs = ₹59
+                    'family': 99,       // 16 pcs = ₹99
+                    'xl': 199           // 32 pcs = ₹199
+                }
             },
+            // Veg Momos - Fried
             'veg-momos-fried': {
                 id: 'veg-momos-fried',
                 name: 'Veg Momos (Fried)',
                 description: 'Crispy fried vegetable momos with spicy red chutney. Extra crunchy goodness!',
-                basePrice: 79,
                 image: 'https://raw.githubusercontent.com/Clean-Scripts/Easygo-Menu/refs/heads/main/veg.png',
                 category: 'Hot & Fresh Snacks',
-                hasPieces: true
+                hasPieces: true,
+                type: 'fried',
+                piecePrice: 10,  // ₹10 per piece
+                packPrices: {
+                    'standard': 79,     // 8 pcs = ₹79
+                    'family': 149,      // 16 pcs = ₹149
+                    'xl': 299           // 32 pcs = ₹299
+                }
             },
+            // Cheese Corn Momos - Steamed
             'cheese-corn-steamed': {
                 id: 'cheese-corn-steamed',
                 name: 'Cheese Corn Momos (Steamed)',
                 description: 'Steamed momos filled with melted cheese and sweet corn. Creamy delight!',
-                basePrice: 89,
                 image: 'https://raw.githubusercontent.com/Clean-Scripts/Easygo-Menu/refs/heads/main/cheese-corn.png',
                 category: 'Hot & Fresh Snacks',
-                hasPieces: true
+                hasPieces: true,
+                type: 'steamed',
+                piecePrice: 12,  // ₹12 per piece
+                packPrices: {
+                    'standard': 89,     // 8 pcs = ₹89
+                    'family': 169,      // 16 pcs = ₹169
+                    'xl': 349           // 32 pcs = ₹349
+                }
             },
+            // Cheese Corn Momos - Fried
             'cheese-corn-fried': {
                 id: 'cheese-corn-fried',
                 name: 'Cheese Corn Momos (Fried)',
                 description: 'Fried cheesy corn momos with creamy mayo dip. Ultimate cheesy treat!',
-                basePrice: 99,
                 image: 'https://raw.githubusercontent.com/Clean-Scripts/Easygo-Menu/refs/heads/main/cheese-corn.png',
                 category: 'Hot & Fresh Snacks',
-                hasPieces: true
+                hasPieces: true,
+                type: 'fried',
+                piecePrice: 15,  // ₹15 per piece
+                packPrices: {
+                    'standard': 99,     // 8 pcs = ₹99
+                    'family': 179,      // 16 pcs = ₹179
+                    'xl': 369           // 32 pcs = ₹369
+                }
             },
+            // Paneer Momos - Steamed
             'paneer-steamed': {
                 id: 'paneer-steamed',
                 name: 'Paneer Momos (Steamed)',
                 description: 'Steamed momos with spicy paneer filling. Rich and protein-packed!',
-                basePrice: 79,
                 image: 'https://raw.githubusercontent.com/Clean-Scripts/Easygo-Menu/refs/heads/main/paneer.png',
                 category: 'Hot & Fresh Snacks',
-                hasPieces: true
+                hasPieces: true,
+                type: 'steamed',
+                piecePrice: 12,  // ₹12 per piece
+                packPrices: {
+                    'standard': 79,     // 8 pcs = ₹79
+                    'family': 149,      // 16 pcs = ₹149
+                    'xl': 299           // 32 pcs = ₹299
+                }
             },
+            // Paneer Momos - Fried
             'paneer-fried': {
                 id: 'paneer-fried',
                 name: 'Paneer Momos (Fried)',
                 description: 'Crispy fried paneer momos with mint coriander chutney.',
-                basePrice: 89,
                 image: 'https://raw.githubusercontent.com/Clean-Scripts/Easygo-Menu/refs/heads/main/paneer.png',
                 category: 'Hot & Fresh Snacks',
-                hasPieces: true
+                hasPieces: true,
+                type: 'fried',
+                piecePrice: 15,  // ₹15 per piece
+                packPrices: {
+                    'standard': 89,     // 8 pcs = ₹89
+                    'family': 169,      // 16 pcs = ₹169
+                    'xl': 329           // 32 pcs = ₹329
+                }
             },
+            // Mini Samosas
             'mini-samosas': {
                 id: 'mini-samosas',
                 name: 'Mini Samosas',
                 description: 'Crispy mini samosas with spicy potato-peas filling. Perfect tea-time snack!',
-                basePrice: 69,
                 image: 'https://raw.githubusercontent.com/Clean-Scripts/Easygo-Menu/refs/heads/main/samosas.png',
                 category: 'Hot & Fresh Snacks',
-                hasPieces: true
+                hasPieces: true,
+                type: 'standard',
+                piecePrice: 10,  // ₹10 per piece
+                packPrices: {
+                    'standard': 69,     // 8 pcs = ₹69
+                    'family': 149,      // 16 pcs = ₹149
+                    'xl': 259           // 32 pcs = ₹259
+                }
             },
+            // French Fries
             'french-fries': {
                 id: 'french-fries',
                 name: 'French Fries',
@@ -266,9 +316,9 @@
                 category: 'Hot & Fresh Snacks',
                 hasPieces: false,
                 packs: {
-                    'standard': { pieces: 1, weight: '200g', price: 69 },
-                    'family': { pieces: 1, weight: '500g', price: 159 },
-                    'xl': { pieces: 1, weight: '1Kg', price: 299 }
+                    'standard': { weight: '200g', price: 69 },
+                    'family': { weight: '500g', price: 169 },
+                    'xl': { weight: '1Kg', price: 299 }
                 }
             }
         };
@@ -278,7 +328,6 @@
         let quantity = 1;
         let selectedPack = null;
         let isPiecePack = false;
-        let piecePrice = 0;
         let existingCartItem = null;
         let isUpdatingExisting = false;
 
@@ -332,16 +381,6 @@
                 if (!selectedPack) return;
                 
                 let maxQuantity = 99;
-                
-                if (currentItem.hasPieces) {
-                    if (isPiecePack) {
-                        maxQuantity = 99;
-                    } else {
-                        maxQuantity = 99;
-                    }
-                } else {
-                    maxQuantity = 99;
-                }
                 
                 if (quantity < maxQuantity) {
                     quantity++;
@@ -398,18 +437,13 @@
 
             currentItem = items[itemId];
             loadItemDetails();
-            setupQuantityButtons(); // Setup quantity buttons here
+            setupQuantityButtons();
             updateCartSummary();
         }
 
         // Load item details
         function loadItemDetails() {
             const container = document.getElementById('item-details');
-            
-            // Calculate piece price if applicable
-            if (currentItem.hasPieces) {
-                piecePrice = Math.floor(currentItem.basePrice / 8);
-            }
             
             container.innerHTML = `
                 <div class="flex flex-col md:flex-row gap-8">
@@ -425,9 +459,9 @@
                         
                         ${currentItem.hasPieces ? `
                         <div class="mt-8 p-6 bg-gray-50 rounded-2xl">
-                            <p class="text-sm text-gray-500 mb-2">Price Per Piece (Floor Value)</p>
-                            <p class="text-3xl font-bold text-green-600">₹${piecePrice}/piece</p>
-                            <p class="text-sm text-gray-500 mt-2">8 Pieces = ₹${currentItem.basePrice}</p>
+                            <p class="text-sm text-gray-500 mb-2">Price Per Piece</p>
+                            <p class="text-3xl font-bold text-green-600">₹${currentItem.piecePrice}/piece</p>
+                            <p class="text-sm text-gray-500 mt-2">8 Pieces = ₹${currentItem.packPrices.standard}</p>
                         </div>
                         ` : ''}
                     </div>
@@ -449,28 +483,28 @@
             if (currentItem.hasPieces) {
                 container.innerHTML = `
                     <div class="pack-option border-2 border-gray-200 rounded-2xl p-4 text-center cursor-pointer hover:border-green-300"
-                         data-pack="piece" data-price="${piecePrice}" data-pieces="1">
+                         data-pack="piece" data-price="${currentItem.piecePrice}" data-pieces="1">
                         <p class="font-bold text-lg">Per Piece</p>
                         <p class="text-gray-600 text-sm">Individual</p>
-                        <p class="text-green-600 font-bold mt-2">₹${piecePrice}/piece</p>
+                        <p class="text-green-600 font-bold mt-2">₹${currentItem.piecePrice}/piece</p>
                     </div>
                     <div class="pack-option border-2 border-gray-200 rounded-2xl p-4 text-center cursor-pointer hover:border-green-300"
-                         data-pack="standard" data-price="${currentItem.basePrice}" data-pieces="8">
+                         data-pack="standard" data-price="${currentItem.packPrices.standard}" data-pieces="8">
                         <p class="font-bold text-lg">Standard</p>
                         <p class="text-gray-600 text-sm">8 Pieces</p>
-                        <p class="text-green-600 font-bold mt-2">₹${currentItem.basePrice}</p>
+                        <p class="text-green-600 font-bold mt-2">₹${currentItem.packPrices.standard}</p>
                     </div>
                     <div class="pack-option border-2 border-gray-200 rounded-2xl p-4 text-center cursor-pointer hover:border-green-300"
-                         data-pack="family" data-price="${Math.floor(currentItem.basePrice * 2)}" data-pieces="16">
+                         data-pack="family" data-price="${currentItem.packPrices.family}" data-pieces="16">
                         <p class="font-bold text-lg">Family Pack</p>
                         <p class="text-gray-600 text-sm">16 Pieces</p>
-                        <p class="text-green-600 font-bold mt-2">₹${Math.floor(currentItem.basePrice * 2)}</p>
+                        <p class="text-green-600 font-bold mt-2">₹${currentItem.packPrices.family}</p>
                     </div>
                     <div class="pack-option border-2 border-gray-200 rounded-2xl p-4 text-center cursor-pointer hover:border-green-300"
-                         data-pack="xl" data-price="${Math.floor(currentItem.basePrice * 4)}" data-pieces="32">
+                         data-pack="xl" data-price="${currentItem.packPrices.xl}" data-pieces="32">
                         <p class="font-bold text-lg">Extra Large</p>
                         <p class="text-gray-600 text-sm">32 Pieces</p>
-                        <p class="text-green-600 font-bold mt-2">₹${Math.floor(currentItem.basePrice * 4)}</p>
+                        <p class="text-green-600 font-bold mt-2">₹${currentItem.packPrices.xl}</p>
                     </div>
                 `;
             } else {
@@ -682,16 +716,7 @@
                 
                 if (isPiecePack) {
                     // Calculate piece price total
-                    const fullPlates = Math.floor(quantity / 8);
-                    const remainingPieces = quantity % 8;
-                    
-                    // Calculate cost using plate prices where applicable
-                    if (fullPlates > 0) {
-                        total += fullPlates * currentItem.basePrice;
-                    }
-                    if (remainingPieces > 0) {
-                        total += remainingPieces * piecePrice;
-                    }
+                    total = currentItem.piecePrice * quantity;
                 } else {
                     total = packPrice * quantity;
                 }
@@ -716,7 +741,7 @@
             if (currentItem.hasPieces) {
                 if (isPiecePack) {
                     itemDescription = `${quantity} piece${quantity !== 1 ? 's' : ''}`;
-                    unitPrice = piecePrice;
+                    unitPrice = currentItem.piecePrice;
                     totalPieces = quantity;
                 } else {
                     const pieces = parseInt(selectedOption.dataset.pieces);

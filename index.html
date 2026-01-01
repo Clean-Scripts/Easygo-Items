@@ -8,106 +8,185 @@
     <title>Easy Go | Item</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-        body { font-family: 'Inter', sans-serif; }
+        body { font-family: 'Inter', sans-serif; min-height: 100vh; display: flex; flex-direction: column; }
+        .main-content { flex: 1; }
         .quantity-btn { width: 45px; height: 45px; border-radius: 50%; }
         .pack-option { transition: all 0.3s; }
         .pack-option.selected { border-color: #10b981; background-color: #f0fdf4; }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #10b981;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .delete-btn {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 1rem;
+            font-weight: bold;
+            font-size: 0.875rem;
+            transition: all 0.3s;
+        }
+        .delete-btn:hover {
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
+            transform: scale(1.05);
+        }
     </style>
 </head>
-<body class="antialiased bg-gray-50">
+<body class="antialiased bg-gray-50 flex flex-col min-h-screen">
 
-    <!-- Header with Banner -->
-    <header class="relative mb-8">
-        <div class="h-40 overflow-hidden">
-            <img src="https://raw.githubusercontent.com/Clean-Scripts/EasyGo-Expense-Tracker/refs/heads/main/Banner.png" 
-                 class="w-full h-full object-cover" alt="Easy Go Banner">
-        </div>
-        <div class="absolute -bottom-6 left-0 right-0 flex justify-center">
-            <img src="https://raw.githubusercontent.com/Clean-Scripts/EasyGo-Expense-Tracker/refs/heads/main/logo.png" 
-                 class="h-20 w-20 rounded-full border-4 border-white shadow-xl bg-white p-1">
-        </div>
-    </header>
-
-    <div class="max-w-4xl mx-auto px-4 pt-10 pb-20">
-        <!-- Back Button -->
-        <a href="https://clean-scripts.github.io/Easygo-Menu/" 
-           class="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-8">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-            </svg>
-            Back to Menu
-        </a>
-
-        <!-- Item Details -->
-        <div id="item-details" class="bg-white rounded-3xl shadow-lg p-8 mb-8">
-            <!-- Item will be dynamically loaded here -->
-            <div class="flex justify-center">
-                <div class="loader border-4 border-gray-200 border-t-blue-500 rounded-full w-12 h-12 animate-spin"></div>
+    <div class="main-content">
+        <!-- Header with Banner -->
+        <header class="relative mb-8">
+            <div class="h-40 overflow-hidden">
+                <img src="https://raw.githubusercontent.com/Clean-Scripts/EasyGo-Expense-Tracker/refs/heads/main/Banner.png" 
+                     class="w-full h-full object-cover" alt="Easy Go Banner">
             </div>
-        </div>
-
-        <!-- Quantity Selector -->
-        <div class="bg-white rounded-3xl shadow-lg p-8 mb-8">
-            <h3 class="text-2xl font-bold mb-6">Quantity</h3>
-            <div class="flex items-center justify-center gap-6">
-                <button id="decrease-qty" class="quantity-btn bg-gray-100 hover:bg-gray-200 text-2xl font-bold">-</button>
-                <span id="quantity-display" class="text-5xl font-black w-20 text-center">1</span>
-                <button id="increase-qty" class="quantity-btn bg-gray-100 hover:bg-gray-200 text-2xl font-bold">+</button>
+            <div class="absolute -bottom-6 left-0 right-0 flex justify-center">
+                <img src="https://raw.githubusercontent.com/Clean-Scripts/EasyGo-Expense-Tracker/refs/heads/main/logo.png" 
+                     class="h-20 w-20 rounded-full border-4 border-white shadow-xl bg-white p-1">
             </div>
-        </div>
+        </header>
 
-        <!-- Pack Size Selector -->
-        <div class="bg-white rounded-3xl shadow-lg p-8 mb-8">
-            <h3 class="text-2xl font-bold mb-6">Select Pack Size</h3>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div class="pack-option border-2 border-gray-200 rounded-2xl p-4 text-center cursor-pointer"
-                     data-pack="piece" data-multiplier="0.125">
-                    <p class="font-bold text-lg">Per Piece</p>
-                    <p class="text-gray-600 text-sm">Individual</p>
-                    <p class="text-green-600 font-bold mt-2">₹<span id="piece-price">0</span>/piece</p>
-                </div>
-                <div class="pack-option border-2 border-green-500 bg-green-50 rounded-2xl p-4 text-center cursor-pointer selected"
-                     data-pack="standard" data-multiplier="1">
-                    <p class="font-bold text-lg">Standard</p>
-                    <p class="text-gray-600 text-sm">8 Pieces</p>
-                    <p class="text-green-600 font-bold mt-2">₹<span id="standard-price">0</span></p>
-                </div>
-                <div class="pack-option border-2 border-gray-200 rounded-2xl p-4 text-center cursor-pointer"
-                     data-pack="family" data-multiplier="1.8">
-                    <p class="font-bold text-lg">Family Pack</p>
-                    <p class="text-gray-600 text-sm">16 Pieces</p>
-                    <p class="text-green-600 font-bold mt-2">₹<span id="family-price">0</span></p>
-                </div>
-                <div class="pack-option border-2 border-gray-200 rounded-2xl p-4 text-center cursor-pointer"
-                     data-pack="xl" data-multiplier="3.2">
-                    <p class="font-bold text-lg">Extra Large</p>
-                    <p class="text-gray-600 text-sm">32 Pieces</p>
-                    <p class="text-green-600 font-bold mt-2">₹<span id="xl-price">0</span></p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Total & Add to Cart -->
-        <div class="bg-gradient-to-r from-green-500 to-emerald-600 rounded-3xl shadow-lg p-8">
+        <div class="max-w-4xl mx-auto px-4 pt-10 pb-8">
+            <!-- Back Button and Cart Info -->
             <div class="flex justify-between items-center mb-8">
-                <div>
-                    <p class="text-white/80 text-sm">Total Price</p>
-                    <p id="total-price" class="text-5xl font-black text-white">₹0</p>
-                </div>
-                <div class="text-right">
-                    <p id="pack-size-display" class="text-white font-bold">Standard (8 pcs)</p>
-                    <p id="quantity-summary" class="text-white/80">Quantity: 1</p>
+                <a href="https://clean-scripts.github.io/Easygo-Menu/" 
+                   class="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                    </svg>
+                    Back to Menu
+                </a>
+                <div id="cart-summary" class="hidden">
+                    <a href="https://clean-scripts.github.io/Easygo-Cart/" 
+                       class="inline-flex items-center gap-2 bg-green-100 text-green-700 px-4 py-2 rounded-2xl hover:bg-green-200">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                  d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+                        </svg>
+                        <span id="cart-count" class="font-bold">0</span> items
+                    </a>
                 </div>
             </div>
-            <button id="add-to-cart" 
-                    class="w-full py-5 bg-white text-green-600 text-xl font-bold rounded-2xl hover:bg-gray-100 transition-colors">
-                🛒 Add to Cart
-            </button>
-            <p class="text-white/80 text-sm text-center mt-4">
-                Item will be added to your cart. You can review before payment.
-            </p>
+
+            <!-- Item Details -->
+            <div id="item-details" class="bg-white rounded-3xl shadow-lg p-8 mb-8">
+                <!-- Item will be dynamically loaded here -->
+                <div class="flex justify-center">
+                    <div class="loader"></div>
+                </div>
+            </div>
+
+            <!-- Pack Size Selector (Hidden initially) -->
+            <div id="pack-selector" class="bg-white rounded-3xl shadow-lg p-8 mb-8 hidden">
+                <h3 class="text-2xl font-bold mb-6">Select Pack Size</h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="pack-options-container">
+                    <!-- Pack options will be dynamically loaded here -->
+                </div>
+            </div>
+
+            <!-- Quantity Selector (Hidden initially) -->
+            <div id="quantity-selector" class="bg-white rounded-3xl shadow-lg p-8 mb-8 hidden">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-2xl font-bold">Quantity</h3>
+                    <button id="delete-item" class="delete-btn hidden">
+                        ❌ Delete Item
+                    </button>
+                </div>
+                
+                <div class="flex flex-col items-center gap-6">
+                    <div class="flex items-center justify-center gap-6">
+                        <button id="decrease-qty" class="quantity-btn bg-gray-100 hover:bg-gray-200 text-2xl font-bold disabled:opacity-50 disabled:cursor-not-allowed" disabled>-</button>
+                        <span id="quantity-display" class="text-5xl font-black w-20 text-center">1</span>
+                        <button id="increase-qty" class="quantity-btn bg-gray-100 hover:bg-gray-200 text-2xl font-bold">+</button>
+                    </div>
+                    <p id="quantity-info" class="text-center text-gray-600 text-sm"></p>
+                    
+                    <!-- Quick Quantity Buttons -->
+                    <div class="flex gap-2 mt-4">
+                        <button class="quick-qty-btn px-4 py-2 bg-gray-100 rounded-xl hover:bg-gray-200 text-sm font-medium" data-qty="1">1</button>
+                        <button class="quick-qty-btn px-4 py-2 bg-gray-100 rounded-xl hover:bg-gray-200 text-sm font-medium" data-qty="2">2</button>
+                        <button class="quick-qty-btn px-4 py-2 bg-gray-100 rounded-xl hover:bg-gray-200 text-sm font-medium" data-qty="4">4</button>
+                        <button class="quick-qty-btn px-4 py-2 bg-gray-100 rounded-xl hover:bg-gray-200 text-sm font-medium" data-qty="8">8</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Total & Add to Cart -->
+            <div id="cart-section" class="bg-gradient-to-r from-green-500 to-emerald-600 rounded-3xl shadow-lg p-8 hidden">
+                <div class="flex justify-between items-center mb-8">
+                    <div>
+                        <p class="text-white/80 text-sm">Total Price</p>
+                        <p id="total-price" class="text-5xl font-black text-white">₹0</p>
+                    </div>
+                    <div class="text-right">
+                        <p id="pack-size-display" class="text-white font-bold">Select pack size</p>
+                        <p id="quantity-summary" class="text-white/80">Quantity: 1</p>
+                    </div>
+                </div>
+                <div class="flex gap-4">
+                    <button id="update-cart" 
+                            class="flex-1 py-5 bg-white text-green-600 text-xl font-bold rounded-2xl hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed hidden"
+                            disabled>
+                        🔄 Update Cart
+                    </button>
+                    <button id="add-to-cart" 
+                            class="flex-1 py-5 bg-white text-green-600 text-xl font-bold rounded-2xl hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            disabled>
+                        🛒 Add to Cart
+                    </button>
+                </div>
+                <p class="text-white/80 text-sm text-center mt-4">
+                    Changes are saved automatically. Visit cart to review all items.
+                </p>
+            </div>
         </div>
     </div>
+
+    <!-- Footer -->
+    <footer class="py-8 bg-gray-50 mt-auto border-t border-gray-200">
+        <div class="max-w-4xl mx-auto px-4">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-6">
+                <div class="text-center md:text-left">
+                    <div class="flex items-center justify-center md:justify-start gap-3">
+                        <img src="https://raw.githubusercontent.com/Clean-Scripts/EasyGo-Expense-Tracker/refs/heads/main/logo.png" 
+                             class="h-10 w-10 rounded-full border-2 border-white shadow">
+                        <div>
+                            <h3 class="text-lg font-black uppercase tracking-tight">Easy Go</h3>
+                            <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Freshness & Speed Delivered</p>
+                        </div>
+                    </div>
+                    <p class="text-[10px] font-medium text-gray-500 mt-4 max-w-md">
+                        MSME | FSSAI | GST Registered • Free Delivery above ₹199 • Serving daily from 5:45 PM to 10:30 PM
+                    </p>
+                </div>
+                
+                <div class="flex flex-col items-center gap-3">
+                    <div class="flex gap-4">
+                        <a href="https://wa.me/917651837322" target="_blank" 
+                           class="bg-green-500 text-white p-3 rounded-2xl shadow-lg hover:bg-green-600 transition-all">
+                            <span class="font-black text-xs uppercase">WhatsApp</span>
+                        </a>
+                        <a href="https://clean-scripts.github.io/Easygo-Cart/" 
+                           class="bg-indigo-500 text-white p-3 rounded-2xl shadow-lg hover:bg-indigo-600 transition-all">
+                            <span class="font-black text-xs uppercase">View Cart</span>
+                        </a>
+                    </div>
+                    <p class="text-[8px] font-bold text-gray-400 uppercase tracking-widest text-center">
+                        © 2024 Easy Go • All Rights Reserved
+                    </p>
+                </div>
+            </div>
+        </div>
+    </footer>
 
     <script>
         // Get item from URL parameters
@@ -119,75 +198,132 @@
             'veg-momos-steamed': {
                 id: 'veg-momos-steamed',
                 name: 'Veg Momos (Steamed)',
-                description: 'Delicious steamed vegetable momos with special sauce',
-                basePrice: 69,
-                image: 'https://raw.githubusercontent.com/Clean-Scripts/EasyGo-Expense-Tracker/refs/heads/main/veg.png',
-                category: 'Hot & Fresh Snacks'
+                description: 'Delicious steamed vegetable momos with our special garlic sauce. Perfect healthy snack!',
+                basePrice: 59,
+                image: 'https://raw.githubusercontent.com/Clean-Scripts/Easygo-Menu/refs/heads/main/veg.png',
+                category: 'Hot & Fresh Snacks',
+                hasPieces: true
             },
             'veg-momos-fried': {
                 id: 'veg-momos-fried',
                 name: 'Veg Momos (Fried)',
-                description: 'Crispy fried vegetable momos with spicy sauce',
+                description: 'Crispy fried vegetable momos with spicy red chutney. Extra crunchy goodness!',
                 basePrice: 79,
-                image: 'https://raw.githubusercontent.com/Clean-Scripts/EasyGo-Expense-Tracker/refs/heads/main/veg.png',
-                category: 'Hot & Fresh Snacks'
+                image: 'https://raw.githubusercontent.com/Clean-Scripts/Easygo-Menu/refs/heads/main/veg.png',
+                category: 'Hot & Fresh Snacks',
+                hasPieces: true
             },
             'cheese-corn-steamed': {
                 id: 'cheese-corn-steamed',
                 name: 'Cheese Corn Momos (Steamed)',
-                description: 'Steamed momos filled with cheese and corn',
+                description: 'Steamed momos filled with melted cheese and sweet corn. Creamy delight!',
                 basePrice: 89,
-                image: 'https://raw.githubusercontent.com/Clean-Scripts/EasyGo-Expense-Tracker/refs/heads/main/cheese-corn.png',
-                category: 'Hot & Fresh Snacks'
+                image: 'https://raw.githubusercontent.com/Clean-Scripts/Easygo-Menu/refs/heads/main/cheese-corn.png',
+                category: 'Hot & Fresh Snacks',
+                hasPieces: true
             },
             'cheese-corn-fried': {
                 id: 'cheese-corn-fried',
                 name: 'Cheese Corn Momos (Fried)',
-                description: 'Fried cheesy corn momos with creamy sauce',
+                description: 'Fried cheesy corn momos with creamy mayo dip. Ultimate cheesy treat!',
                 basePrice: 99,
-                image: 'https://raw.githubusercontent.com/Clean-Scripts/EasyGo-Expense-Tracker/refs/heads/main/cheese-corn.png',
-                category: 'Hot & Fresh Snacks'
+                image: 'https://raw.githubusercontent.com/Clean-Scripts/Easygo-Menu/refs/heads/main/cheese-corn.png',
+                category: 'Hot & Fresh Snacks',
+                hasPieces: true
             },
             'paneer-steamed': {
                 id: 'paneer-steamed',
                 name: 'Paneer Momos (Steamed)',
-                description: 'Steamed momos with spicy paneer filling',
-                basePrice: 89,
-                image: 'https://raw.githubusercontent.com/Clean-Scripts/EasyGo-Expense-Tracker/refs/heads/main/paneer.png',
-                category: 'Hot & Fresh Snacks'
+                description: 'Steamed momos with spicy paneer filling. Rich and protein-packed!',
+                basePrice: 79,
+                image: 'https://raw.githubusercontent.com/Clean-Scripts/Easygo-Menu/refs/heads/main/paneer.png',
+                category: 'Hot & Fresh Snacks',
+                hasPieces: true
             },
             'paneer-fried': {
                 id: 'paneer-fried',
                 name: 'Paneer Momos (Fried)',
-                description: 'Crispy fried paneer momos with mint sauce',
-                basePrice: 99,
-                image: 'https://raw.githubusercontent.com/Clean-Scripts/EasyGo-Expense-Tracker/refs/heads/main/paneer.png',
-                category: 'Hot & Fresh Snacks'
+                description: 'Crispy fried paneer momos with mint coriander chutney.',
+                basePrice: 89,
+                image: 'https://raw.githubusercontent.com/Clean-Scripts/Easygo-Menu/refs/heads/main/paneer.png',
+                category: 'Hot & Fresh Snacks',
+                hasPieces: true
             },
             'mini-samosas': {
                 id: 'mini-samosas',
                 name: 'Mini Samosas',
-                description: 'Crispy mini samosas with potato filling',
-                basePrice: 79,
-                image: 'https://raw.githubusercontent.com/Clean-Scripts/EasyGo-Expense-Tracker/refs/heads/main/samosas.png',
-                category: 'Hot & Fresh Snacks'
+                description: 'Crispy mini samosas with spicy potato-peas filling. Perfect tea-time snack!',
+                basePrice: 69,
+                image: 'https://raw.githubusercontent.com/Clean-Scripts/Easygo-Menu/refs/heads/main/samosas.png',
+                category: 'Hot & Fresh Snacks',
+                hasPieces: true
             },
             'french-fries': {
                 id: 'french-fries',
                 name: 'French Fries',
-                description: 'Crispy golden french fries with seasoning',
-                basePrice: 79,
-                image: 'https://raw.githubusercontent.com/Clean-Scripts/EasyGo-Expense-Tracker/refs/heads/main/fries.png',
+                description: 'Golden crispy french fries with special seasoning. Addictively delicious!',
+                image: 'https://raw.githubusercontent.com/Clean-Scripts/Easygo-Menu/refs/heads/main/fries.png',
                 category: 'Hot & Fresh Snacks',
-                hasPieces: false
+                hasPieces: false,
+                packs: {
+                    'standard': { pieces: 1, weight: '200g', price: 69 },
+                    'family': { pieces: 1, weight: '500g', price: 159 },
+                    'xl': { pieces: 1, weight: '1Kg', price: 299 }
+                }
             }
         };
 
         // Current item and state
         let currentItem = null;
         let quantity = 1;
-        let selectedPack = 'standard';
-        let multiplier = 1;
+        let selectedPack = null;
+        let isPiecePack = false;
+        let piecePrice = 0;
+        let existingCartItem = null;
+        let isUpdatingExisting = false;
+
+        // Cart management functions
+        function loadCart() {
+            try {
+                const cartData = localStorage.getItem('easygo-cart');
+                return cartData ? JSON.parse(cartData) : [];
+            } catch (error) {
+                console.error('Error loading cart:', error);
+                return [];
+            }
+        }
+
+        function saveCart(cart) {
+            try {
+                localStorage.setItem('easygo-cart', JSON.stringify(cart));
+                updateCartSummary();
+            } catch (error) {
+                console.error('Error saving cart:', error);
+            }
+        }
+
+        function updateCartSummary() {
+            const cart = loadCart();
+            const cartSummary = document.getElementById('cart-summary');
+            const cartCount = document.getElementById('cart-count');
+            
+            if (cart.length > 0) {
+                const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+                cartCount.textContent = totalItems;
+                cartSummary.classList.remove('hidden');
+            } else {
+                cartSummary.classList.add('hidden');
+            }
+        }
+
+        function checkIfItemInCart() {
+            if (!currentItem || !selectedPack) return null;
+            
+            const cart = loadCart();
+            const itemKey = `${currentItem.id}-${selectedPack}`;
+            
+            return cart.find(item => item.id === itemKey) || null;
+        }
 
         // Initialize page
         function initPage() {
@@ -198,141 +334,469 @@
 
             currentItem = items[itemId];
             loadItemDetails();
-            updatePrices();
-            updateTotal();
+            setupEventListeners();
+            updateCartSummary(); // Show cart summary on load
         }
 
         // Load item details
         function loadItemDetails() {
             const container = document.getElementById('item-details');
+            
+            // Calculate piece price if applicable
+            if (currentItem.hasPieces) {
+                piecePrice = Math.floor(currentItem.basePrice / 8); // Floor value for per piece
+            }
+            
             container.innerHTML = `
                 <div class="flex flex-col md:flex-row gap-8">
-                    <div class="md:w-1/2">
+                    <div class="md:w-1/2 flex items-center justify-center">
                         <img src="${currentItem.image}" 
                              alt="${currentItem.name}" 
-                             class="w-full h-64 md:h-96 object-contain rounded-3xl shadow-lg">
+                             class="w-full max-w-md h-auto object-contain rounded-3xl shadow-lg">
                     </div>
                     <div class="md:w-1/2">
                         <p class="text-sm font-bold text-green-600 uppercase tracking-widest">${currentItem.category}</p>
                         <h1 class="text-4xl font-black uppercase mt-2">${currentItem.name}</h1>
-                        <p class="text-gray-600 text-lg mt-4">${currentItem.description}</p>
+                        <p class="text-gray-600 text-lg mt-4 leading-relaxed">${currentItem.description}</p>
+                        
+                        ${currentItem.hasPieces ? `
                         <div class="mt-8 p-6 bg-gray-50 rounded-2xl">
-                            <p class="text-sm text-gray-500">Base Price</p>
-                            <p class="text-3xl font-bold text-green-600">₹${currentItem.basePrice}</p>
-                            ${currentItem.hasPieces === false ? '<p class="text-sm text-gray-500 mt-2">Serving: 250g</p>' : ''}
+                            <p class="text-sm text-gray-500 mb-2">Price Per Piece (Floor Value)</p>
+                            <p class="text-3xl font-bold text-green-600">₹${piecePrice}/piece</p>
+                            <p class="text-sm text-gray-500 mt-2">8 Pieces = ₹${currentItem.basePrice}</p>
                         </div>
+                        ` : ''}
                     </div>
                 </div>
             `;
+            
+            // Load pack options
+            loadPackOptions();
+            
+            // Show sections
+            document.getElementById('pack-selector').classList.remove('hidden');
+            document.getElementById('quantity-selector').classList.remove('hidden');
+            document.getElementById('cart-section').classList.remove('hidden');
         }
 
-        // Update pack prices
-        function updatePrices() {
-            const base = currentItem.basePrice;
+        // Load pack options
+        function loadPackOptions() {
+            const container = document.getElementById('pack-options-container');
             
-            document.getElementById('piece-price').textContent = (base * 0.125).toFixed(2);
-            document.getElementById('standard-price').textContent = base;
-            document.getElementById('family-price').textContent = (base * 1.8).toFixed(0);
-            document.getElementById('xl-price').textContent = (base * 3.2).toFixed(0);
+            if (currentItem.hasPieces) {
+                container.innerHTML = `
+                    <div class="pack-option border-2 border-gray-200 rounded-2xl p-4 text-center cursor-pointer hover:border-green-300"
+                         data-pack="piece" data-price="${piecePrice}" data-pieces="1">
+                        <p class="font-bold text-lg">Per Piece</p>
+                        <p class="text-gray-600 text-sm">Individual</p>
+                        <p class="text-green-600 font-bold mt-2">₹${piecePrice}/piece</p>
+                    </div>
+                    <div class="pack-option border-2 border-gray-200 rounded-2xl p-4 text-center cursor-pointer hover:border-green-300"
+                         data-pack="standard" data-price="${currentItem.basePrice}" data-pieces="8">
+                        <p class="font-bold text-lg">Standard</p>
+                        <p class="text-gray-600 text-sm">8 Pieces</p>
+                        <p class="text-green-600 font-bold mt-2">₹${currentItem.basePrice}</p>
+                    </div>
+                    <div class="pack-option border-2 border-gray-200 rounded-2xl p-4 text-center cursor-pointer hover:border-green-300"
+                         data-pack="family" data-price="${Math.floor(currentItem.basePrice * 2)}" data-pieces="16">
+                        <p class="font-bold text-lg">Family Pack</p>
+                        <p class="text-gray-600 text-sm">16 Pieces</p>
+                        <p class="text-green-600 font-bold mt-2">₹${Math.floor(currentItem.basePrice * 2)}</p>
+                    </div>
+                    <div class="pack-option border-2 border-gray-200 rounded-2xl p-4 text-center cursor-pointer hover:border-green-300"
+                         data-pack="xl" data-price="${Math.floor(currentItem.basePrice * 4)}" data-pieces="32">
+                        <p class="font-bold text-lg">Extra Large</p>
+                        <p class="text-gray-600 text-sm">32 Pieces</p>
+                        <p class="text-green-600 font-bold mt-2">₹${Math.floor(currentItem.basePrice * 4)}</p>
+                    </div>
+                `;
+            } else {
+                // French fries special packs
+                container.innerHTML = `
+                    <div class="pack-option border-2 border-gray-200 rounded-2xl p-4 text-center cursor-pointer hover:border-green-300"
+                         data-pack="standard" data-price="${currentItem.packs.standard.price}" data-weight="${currentItem.packs.standard.weight}">
+                        <p class="font-bold text-lg">Standard</p>
+                        <p class="text-gray-600 text-sm">${currentItem.packs.standard.weight}</p>
+                        <p class="text-green-600 font-bold mt-2">₹${currentItem.packs.standard.price}</p>
+                    </div>
+                    <div class="pack-option border-2 border-gray-200 rounded-2xl p-4 text-center cursor-pointer hover:border-green-300"
+                         data-pack="family" data-price="${currentItem.packs.family.price}" data-weight="${currentItem.packs.family.weight}">
+                        <p class="font-bold text-lg">Family Pack</p>
+                        <p class="text-gray-600 text-sm">${currentItem.packs.family.weight}</p>
+                        <p class="text-green-600 font-bold mt-2">₹${currentItem.packs.family.price}</p>
+                    </div>
+                    <div class="pack-option border-2 border-gray-200 rounded-2xl p-4 text-center cursor-pointer hover:border-green-300"
+                         data-pack="xl" data-price="${currentItem.packs.xl.price}" data-weight="${currentItem.packs.xl.weight}">
+                        <p class="font-bold text-lg">Extra Large</p>
+                        <p class="text-gray-600 text-sm">${currentItem.packs.xl.weight}</p>
+                        <p class="text-green-600 font-bold mt-2">₹${currentItem.packs.xl.price}</p>
+                    </div>
+                    <div class="border-2 border-gray-100 rounded-2xl p-4 text-center opacity-50 cursor-not-allowed">
+                        <p class="font-bold text-lg text-gray-400">Per Piece</p>
+                        <p class="text-gray-400 text-sm">Not Available</p>
+                        <p class="text-gray-400 font-bold mt-2">-</p>
+                    </div>
+                `;
+            }
+            
+            // Add click handlers to pack options
+            document.querySelectorAll('.pack-option').forEach(option => {
+                option.addEventListener('click', () => {
+                    // Remove selected class from all
+                    document.querySelectorAll('.pack-option').forEach(opt => {
+                        opt.classList.remove('selected', 'border-green-500', 'bg-green-50');
+                        opt.classList.add('border-gray-200');
+                    });
+                    
+                    // Add to clicked
+                    option.classList.add('selected', 'border-green-500', 'bg-green-50');
+                    option.classList.remove('border-gray-200');
+                    
+                    // Update selection
+                    selectedPack = option.dataset.pack;
+                    isPiecePack = (selectedPack === 'piece');
+                    
+                    // Check if this item already exists in cart
+                    existingCartItem = checkIfItemInCart();
+                    isUpdatingExisting = existingCartItem !== null;
+                    
+                    // Set quantity based on existing cart item or default
+                    quantity = existingCartItem ? existingCartItem.quantity : 1;
+                    document.getElementById('quantity-display').textContent = quantity;
+                    
+                    // Show/hide appropriate buttons
+                    const deleteBtn = document.getElementById('delete-item');
+                    const updateBtn = document.getElementById('update-cart');
+                    const addBtn = document.getElementById('add-to-cart');
+                    
+                    if (isUpdatingExisting) {
+                        deleteBtn.classList.remove('hidden');
+                        updateBtn.classList.remove('hidden');
+                        addBtn.classList.add('hidden');
+                    } else {
+                        deleteBtn.classList.add('hidden');
+                        updateBtn.classList.add('hidden');
+                        addBtn.classList.remove('hidden');
+                    }
+                    
+                    // Enable/disable quantity buttons
+                    const decreaseBtn = document.getElementById('decrease-qty');
+                    const increaseBtn = document.getElementById('increase-qty');
+                    
+                    decreaseBtn.disabled = quantity <= 1;
+                    if (decreaseBtn.disabled) {
+                        decreaseBtn.classList.add('disabled:opacity-50', 'disabled:cursor-not-allowed');
+                    } else {
+                        decreaseBtn.classList.remove('disabled:opacity-50', 'disabled:cursor-not-allowed');
+                    }
+                    
+                    increaseBtn.disabled = false;
+                    increaseBtn.classList.remove('disabled:opacity-50', 'disabled:cursor-not-allowed');
+                    
+                    // Enable cart buttons
+                    updateBtn.disabled = false;
+                    updateBtn.classList.remove('disabled:opacity-50', 'disabled:cursor-not-allowed');
+                    addBtn.disabled = false;
+                    addBtn.classList.remove('disabled:opacity-50', 'disabled:cursor-not-allowed');
+                    
+                    // Update display and total
+                    updatePackDisplay();
+                    updateTotal();
+                });
+            });
+            
+            // Check if any pack should be pre-selected based on existing cart item
+            if (existingCartItem) {
+                const packToSelect = document.querySelector(`.pack-option[data-pack="${existingCartItem.pack}"]`);
+                if (packToSelect) {
+                    setTimeout(() => {
+                        packToSelect.click();
+                    }, 100);
+                }
+            }
+        }
+
+        // Update pack display info
+        function updatePackDisplay() {
+            const packDisplay = document.getElementById('pack-size-display');
+            const quantityInfo = document.getElementById('quantity-info');
+            
+            if (currentItem.hasPieces) {
+                const packNames = {
+                    'piece': 'Per Piece',
+                    'standard': 'Standard Pack',
+                    'family': 'Family Pack',
+                    'xl': 'Extra Large Pack'
+                };
+                
+                const packPieces = {
+                    'piece': '1 piece',
+                    'standard': '8 pieces',
+                    'family': '16 pieces',
+                    'xl': '32 pieces'
+                };
+                
+                packDisplay.textContent = `${packNames[selectedPack]} (${packPieces[selectedPack]})`;
+                
+                if (isPiecePack) {
+                    const totalPieces = quantity;
+                    const fullPlates = Math.floor(totalPieces / 8);
+                    const remainingPieces = totalPieces % 8;
+                    
+                    let infoText = `${totalPieces} piece${totalPieces !== 1 ? 's' : ''}`;
+                    if (fullPlates > 0) {
+                        infoText += ` = ${fullPlates} plate${fullPlates !== 1 ? 's' : ''}`;
+                        if (remainingPieces > 0) {
+                            infoText += ` + ${remainingPieces} piece${remainingPieces !== 1 ? 's' : ''}`;
+                        }
+                    }
+                    quantityInfo.textContent = infoText;
+                } else {
+                    const selectedOption = document.querySelector(`.pack-option[data-pack="${selectedPack}"]`);
+                    const pieces = selectedOption.dataset.pieces;
+                    quantityInfo.textContent = `${quantity} pack${quantity !== 1 ? 's' : ''} × ${pieces} pieces = ${quantity * parseInt(pieces)} pieces total`;
+                }
+            } else {
+                // French fries
+                const selectedOption = document.querySelector(`.pack-option[data-pack="${selectedPack}"]`);
+                const weight = selectedOption.dataset.weight;
+                packDisplay.textContent = `${selectedPack.charAt(0).toUpperCase() + selectedPack.slice(1)} Pack (${weight})`;
+                quantityInfo.textContent = `${quantity} pack${quantity !== 1 ? 's' : ''} × ${weight}`;
+            }
+            
+            document.getElementById('quantity-summary').textContent = `Quantity: ${quantity}`;
         }
 
         // Update total price
         function updateTotal() {
-            const total = (currentItem.basePrice * multiplier * quantity).toFixed(2);
-            document.getElementById('total-price').textContent = `₹${total}`;
+            let total = 0;
             
-            // Update pack display
-            const packNames = {
-                'piece': 'Per Piece',
-                'standard': 'Standard (8 pcs)',
-                'family': 'Family Pack (16 pcs)',
-                'xl': 'Extra Large (32 pcs)'
-            };
+            if (selectedPack) {
+                const selectedOption = document.querySelector(`.pack-option[data-pack="${selectedPack}"]`);
+                const packPrice = parseFloat(selectedOption.dataset.price);
+                
+                if (isPiecePack) {
+                    // Calculate piece price total
+                    const fullPlates = Math.floor(quantity / 8);
+                    const remainingPieces = quantity % 8;
+                    
+                    // Calculate cost using plate prices where applicable
+                    if (fullPlates > 0) {
+                        total += fullPlates * currentItem.basePrice;
+                    }
+                    if (remainingPieces > 0) {
+                        total += remainingPieces * piecePrice;
+                    }
+                } else {
+                    total = packPrice * quantity;
+                }
+            }
             
-            document.getElementById('pack-size-display').textContent = packNames[selectedPack];
-            document.getElementById('quantity-summary').textContent = `Quantity: ${quantity}`;
+            document.getElementById('total-price').textContent = `₹${Math.floor(total)}`;
+            updatePackDisplay();
         }
 
-        // Event Listeners
-        document.getElementById('increase-qty').addEventListener('click', () => {
-            quantity++;
-            document.getElementById('quantity-display').textContent = quantity;
-            updateTotal();
-        });
-
-        document.getElementById('decrease-qty').addEventListener('click', () => {
-            if (quantity > 1) {
-                quantity--;
+        // Delete item from cart
+        function deleteItemFromCart() {
+            if (!isUpdatingExisting || !existingCartItem) return;
+            
+            if (confirm(`Are you sure you want to remove "${currentItem.name}" from your cart?`)) {
+                const cart = loadCart();
+                const itemKey = `${currentItem.id}-${selectedPack}`;
+                
+                // Remove the item
+                const updatedCart = cart.filter(item => item.id !== itemKey);
+                saveCart(updatedCart);
+                
+                // Reset state
+                existingCartItem = null;
+                isUpdatingExisting = false;
+                quantity = 1;
                 document.getElementById('quantity-display').textContent = quantity;
+                
+                // Update UI
+                document.getElementById('delete-item').classList.add('hidden');
+                document.getElementById('update-cart').classList.add('hidden');
+                document.getElementById('add-to-cart').classList.remove('hidden');
+                
+                // Update cart summary
+                updateCartSummary();
+                
+                // Show success message
+                alert(`✅ Item removed from cart!`);
+                
                 updateTotal();
             }
-        });
+        }
 
-        // Pack selection
-        document.querySelectorAll('.pack-option').forEach(option => {
-            option.addEventListener('click', function() {
-                // Remove selected class from all
-                document.querySelectorAll('.pack-option').forEach(opt => {
-                    opt.classList.remove('selected', 'border-green-500', 'bg-green-50');
-                    opt.classList.add('border-gray-200');
-                });
-                
-                // Add to clicked
-                this.classList.add('selected', 'border-green-500', 'bg-green-50');
-                this.classList.remove('border-gray-200');
-                
-                // Update selection
-                selectedPack = this.dataset.pack;
-                multiplier = parseFloat(this.dataset.multiplier);
-                updateTotal();
-            });
-        });
-
-        // Add to cart
-        document.getElementById('add-to-cart').addEventListener('click', () => {
+        // Save item to cart
+        function saveItemToCart() {
+            if (!selectedPack) return;
+            
+            const selectedOption = document.querySelector(`.pack-option[data-pack="${selectedPack}"]`);
+            const packPrice = parseFloat(selectedOption.dataset.price);
+            
+            let itemName = currentItem.name;
+            let itemDescription = '';
+            let unitPrice = 0;
+            let totalPieces = 0;
+            
+            if (currentItem.hasPieces) {
+                if (isPiecePack) {
+                    itemDescription = `${quantity} piece${quantity !== 1 ? 's' : ''}`;
+                    unitPrice = piecePrice;
+                    totalPieces = quantity;
+                } else {
+                    const pieces = parseInt(selectedOption.dataset.pieces);
+                    itemDescription = `${quantity} pack${quantity !== 1 ? 's' : ''} (${pieces} pieces each)`;
+                    unitPrice = packPrice;
+                    totalPieces = quantity * pieces;
+                }
+            } else {
+                const weight = selectedOption.dataset.weight;
+                itemDescription = `${quantity} pack${quantity !== 1 ? 's' : ''} (${weight} each)`;
+                unitPrice = packPrice;
+            }
+            
             const cartItem = {
-                id: currentItem.id,
-                name: currentItem.name,
+                id: `${currentItem.id}-${selectedPack}`,
+                itemId: currentItem.id,
+                name: itemName,
+                description: itemDescription,
                 image: currentItem.image,
-                basePrice: currentItem.basePrice,
                 pack: selectedPack,
-                multiplier: multiplier,
+                isPiecePack: isPiecePack,
+                unitPrice: unitPrice,
                 quantity: quantity,
-                total: (currentItem.basePrice * multiplier * quantity).toFixed(2)
+                totalPrice: Math.floor(parseFloat(document.getElementById('total-price').textContent.replace('₹', ''))),
+                totalPieces: totalPieces,
+                timestamp: new Date().toISOString()
             };
 
-            // Get existing cart
-            let cart = JSON.parse(localStorage.getItem('easygo-cart')) || [];
-            
-            // Check if item already exists
-            const existingIndex = cart.findIndex(item => 
-                item.id === cartItem.id && item.pack === cartItem.pack);
+            const cart = loadCart();
+            const existingIndex = cart.findIndex(item => item.id === cartItem.id);
             
             if (existingIndex > -1) {
-                // Update quantity
-                cart[existingIndex].quantity += cartItem.quantity;
-                cart[existingIndex].total = (cart[existingIndex].basePrice * 
-                    cart[existingIndex].multiplier * 
-                    cart[existingIndex].quantity).toFixed(2);
+                // Update existing item
+                cart[existingIndex] = cartItem;
             } else {
                 // Add new item
                 cart.push(cartItem);
             }
             
-            // Save to localStorage
-            localStorage.setItem('easygo-cart', JSON.stringify(cart));
+            saveCart(cart);
+            existingCartItem = cartItem;
+            isUpdatingExisting = true;
             
-            // Set expiry for 1 week
-            const expiry = new Date();
-            expiry.setDate(expiry.getDate() + 7);
-            localStorage.setItem('easygo-cart-expiry', expiry.toISOString());
+            // Update UI
+            document.getElementById('delete-item').classList.remove('hidden');
+            document.getElementById('update-cart').classList.remove('hidden');
+            document.getElementById('add-to-cart').classList.add('hidden');
             
-            // Redirect to cart
-            window.location.href = 'https://clean-scripts.github.io/Easygo-Cart/';
-        });
+            // Show success message
+            const action = existingIndex > -1 ? 'updated' : 'added';
+            alert(`✅ Item ${action} to cart!\n${quantity} × ${itemName}\nTotal: ₹${cartItem.totalPrice}`);
+            
+            updateCartSummary();
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Quantity buttons
+            document.getElementById('increase-qty').addEventListener('click', () => {
+                if (!selectedPack) return;
+                
+                let maxQuantity = 99; // Default max
+                
+                if (currentItem.hasPieces) {
+                    if (isPiecePack) {
+                        maxQuantity = 99; // Allow up to 99 pieces
+                    } else {
+                        maxQuantity = 99; // Allow up to 99 packs
+                    }
+                } else {
+                    maxQuantity = 99; // Allow up to 99 packs for fries
+                }
+                
+                if (quantity < maxQuantity) {
+                    quantity++;
+                    document.getElementById('quantity-display').textContent = quantity;
+                    
+                    // Enable decrease button if quantity > 1
+                    if (quantity > 1) {
+                        document.getElementById('decrease-qty').disabled = false;
+                        document.getElementById('decrease-qty').classList.remove('disabled:opacity-50', 'disabled:cursor-not-allowed');
+                    }
+                    
+                    updateTotal();
+                }
+            });
+
+            document.getElementById('decrease-qty').addEventListener('click', () => {
+                if (quantity > 1) {
+                    quantity--;
+                    document.getElementById('quantity-display').textContent = quantity;
+                    
+                    // Disable decrease button if quantity is 1
+                    if (quantity === 1) {
+                        document.getElementById('decrease-qty').disabled = true;
+                        document.getElementById('decrease-qty').classList.add('disabled:opacity-50', 'disabled:cursor-not-allowed');
+                    }
+                    
+                    updateTotal();
+                }
+            });
+
+            // Quick quantity buttons
+            document.querySelectorAll('.quick-qty-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    if (!selectedPack) return;
+                    
+                    const newQty = parseInt(btn.dataset.qty);
+                    quantity = newQty;
+                    document.getElementById('quantity-display').textContent = quantity;
+                    
+                    // Update decrease button state
+                    const decreaseBtn = document.getElementById('decrease-qty');
+                    if (quantity > 1) {
+                        decreaseBtn.disabled = false;
+                        decreaseBtn.classList.remove('disabled:opacity-50', 'disabled:cursor-not-allowed');
+                    } else {
+                        decreaseBtn.disabled = true;
+                        decreaseBtn.classList.add('disabled:opacity-50', 'disabled:cursor-not-allowed');
+                    }
+                    
+                    updateTotal();
+                });
+            });
+
+            // Delete button
+            document.getElementById('delete-item').addEventListener('click', deleteItemFromCart);
+
+            // Update cart button
+            document.getElementById('update-cart').addEventListener('click', saveItemToCart);
+
+            // Add to cart button
+            document.getElementById('add-to-cart').addEventListener('click', saveItemToCart);
+        }
 
         // Initialize on load
         window.addEventListener('DOMContentLoaded', initPage);
+        
+        // Check cart expiry on load
+        function checkCartExpiry() {
+            const expiry = localStorage.getItem('easygo-cart-expiry');
+            if (expiry) {
+                const expiryDate = new Date(expiry);
+                if (new Date() > expiryDate) {
+                    localStorage.removeItem('easygo-cart');
+                    localStorage.removeItem('easygo-cart-expiry');
+                    console.log('Cart expired and cleared');
+                }
+            }
+        }
+        
+        checkCartExpiry();
     </script>
 </body>
 </html>

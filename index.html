@@ -5,799 +5,97 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/Clean-Scripts/EasyGo-Expense-Tracker/refs/heads/main/logo.png">
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    
     <title>Easy Go | Item</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-        body { font-family: 'Inter', sans-serif; background: #ffffff; color: #1a1a1a; min-height: 100vh; display: flex; flex-direction: column; }
-        .banner-clip { clip-path: polygon(0 0, 100% 0, 100% 85%, 0 100%); }
-        .main-content { flex: 1; }
-        
-        /* Custom animations */
-        @keyframes bounce-short {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-5px); }
-        }
-        .animate-bounce-short { animation: bounce-short 3s infinite; }
-        
-        /* Pack option styling */
-        .pack-option {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .pack-option.selected {
-            border-color: #10b981;
-            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
-            transform: scale(1.02);
-        }
-        .pack-option:hover:not(.selected) {
-            border-color: #3b82f6;
-            transform: translateY(-2px);
-        }
-        
-        /* Quantity controls */
-        .quantity-btn {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            transition: all 0.2s;
-        }
-        .quantity-btn:active {
-            transform: scale(0.95);
-        }
-        
-        /* Action buttons */
-        .action-btn {
-            transition: all 0.3s;
-        }
-        .action-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-        }
-        
-        /* Footer fix */
-        footer { margin-top: auto; }
-        
-        /* Loading spinner */
-        .loader {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #10b981;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+        body { font-family: 'Inter', sans-serif; }
     </style>
 </head>
-<body class="antialiased flex flex-col min-h-screen">
-
-    <!-- Main Content -->
-    <div class="main-content">
-        <!-- Header with Banner -->
-        <header class="relative mb-8">
-            <div class="h-48 md:h-64 overflow-hidden banner-clip">
-                <img src="https://raw.githubusercontent.com/Clean-Scripts/EasyGo-Expense-Tracker/refs/heads/main/Banner.png" 
-                     class="w-full h-full object-cover" alt="Easy Go Banner">
-            </div>
-            <div class="absolute -bottom-6 left-0 right-0 flex justify-center">
-                <img src="https://raw.githubusercontent.com/Clean-Scripts/EasyGo-Expense-Tracker/refs/heads/main/logo.png" 
-                     class="h-32 w-32 rounded-full border-4 border-white shadow-xl bg-white p-1">
-            </div>
-        </header>
-
-        <div class="max-w-6xl mx-auto px-4 pt-10 pb-12">
-            <!-- Page Title & Cart Info -->
-            <div class="flex flex-col md:flex-row justify-between items-center mb-10 gap-6">
-                <div>
-                    <h1 id="page-title" class="text-4xl font-black uppercase tracking-tighter mb-2">Loading...</h1>
-                    <p class="text-gray-500 uppercase text-sm font-bold tracking-widest">Customize your order</p>
-                </div>
-                
-                <div id="cart-summary" class="bg-gray-900 text-white px-6 py-3 rounded-2xl flex items-center gap-4 hidden">
-                    <div class="flex items-center gap-3">
-                        <i class="fas fa-shopping-cart text-xl"></i>
-                        <div>
-                            <p class="text-xs font-bold uppercase tracking-widest text-gray-400">Cart Total</p>
-                            <p id="cart-total" class="text-2xl font-black">₹0</p>
-                        </div>
-                    </div>
-                    <a href="https://clean-scripts.github.io/Easygo-Cart/" 
-                       class="bg-green-500 text-white px-6 py-3 rounded-xl font-bold uppercase text-sm hover:bg-green-600 transition-all">
-                        View Cart
-                    </a>
-                </div>
-            </div>
-
-            <!-- Item Details -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 mb-12">
-                <!-- Left Column - Item Image -->
-                <div class="flex items-center justify-center">
-                    <div class="bg-gray-50 rounded-[2.5rem] p-8 border-2 border-gray-100 w-full">
-                        <img id="item-image" 
-                             src="" 
-                             alt="Item" 
-                             class="w-full h-auto object-contain rounded-2xl shadow-lg">
-                    </div>
-                </div>
-                
-                <!-- Right Column - Item Info -->
-                <div>
-                    <div class="mb-8">
-                        <p id="item-category" class="text-xs font-black text-green-600 uppercase tracking-widest mb-2">Loading...</p>
-                        <h2 id="item-name" class="text-3xl font-black uppercase mb-4">Loading...</h2>
-                        <p id="item-description" class="text-gray-600 text-lg leading-relaxed">Loading...</p>
-                        
-                        <!-- Special Tags -->
-                        <div class="flex gap-2 mt-6">
-                            <span class="px-4 py-2 bg-red-50 text-red-600 rounded-xl text-xs font-bold uppercase">🔥 Hot & Fresh</span>
-                            <span class="px-4 py-2 bg-blue-50 text-blue-600 rounded-xl text-xs font-bold uppercase">🍴 8+ Pieces</span>
-                            <span class="px-4 py-2 bg-green-50 text-green-600 rounded-xl text-xs font-bold uppercase">🌿 100% Veg</span>
-                        </div>
-                    </div>
-                    
-                    <!-- Pack Size Selector -->
-                    <div class="mb-10">
-                        <h3 class="text-xl font-black uppercase mb-6">Select Pack Size</h3>
-                        <div class="grid grid-cols-2 gap-4" id="pack-options-container">
-                            <!-- Pack options will be dynamically loaded -->
-                            <div class="flex items-center justify-center py-10 col-span-2">
-                                <div class="loader"></div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Quantity Selector -->
-                    <div class="mb-10">
-                        <h3 class="text-xl font-black uppercase mb-6">Quantity</h3>
-                        <div class="flex flex-col items-center gap-8">
-                            <div class="flex items-center justify-center gap-8">
-                                <button id="decrease-qty" 
-                                        class="quantity-btn bg-gray-100 hover:bg-gray-200 text-3xl font-black disabled:opacity-30 disabled:cursor-not-allowed"
-                                        disabled>-</button>
-                                <span id="quantity-display" class="text-6xl font-black w-24 text-center">1</span>
-                                <button id="increase-qty" 
-                                        class="quantity-btn bg-gray-100 hover:bg-gray-200 text-3xl font-black">+</button>
-                            </div>
-                            
-                            <!-- Quick Quantity -->
-                            <div class="flex gap-3 flex-wrap justify-center">
-                                <button class="quick-qty-btn px-5 py-3 bg-gray-100 rounded-2xl hover:bg-gray-200 text-sm font-bold uppercase" data-qty="1">Single</button>
-                                <button class="quick-qty-btn px-5 py-3 bg-gray-100 rounded-2xl hover:bg-gray-200 text-sm font-bold uppercase" data-qty="2">Double</button>
-                                <button class="quick-qty-btn px-5 py-3 bg-gray-100 rounded-2xl hover:bg-gray-200 text-sm font-bold uppercase" data-qty="4">Family (4)</button>
-                                <button class="quick-qty-btn px-5 py-3 bg-gray-100 rounded-2xl hover:bg-gray-200 text-sm font-bold uppercase" data-qty="8">Party (8)</button>
-                            </div>
-                            
-                            <p id="quantity-info" class="text-center text-gray-500 text-sm font-medium"></p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Price Summary & Actions -->
-            <div class="glass-card rounded-[2.5rem] p-8 border-2 border-gray-100 mb-10">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <!-- Price Breakdown -->
-                    <div>
-                        <h3 class="text-2xl font-black uppercase mb-6">Price Breakdown</h3>
-                        <div class="space-y-4">
-                            <div class="flex justify-between items-center p-4 bg-gray-50 rounded-2xl">
-                                <span class="font-bold text-gray-700">Item Price</span>
-                                <span id="item-price" class="font-black text-gray-900 text-xl">₹0</span>
-                            </div>
-                            <div class="flex justify-between items-center p-4 bg-gray-50 rounded-2xl">
-                                <span class="font-bold text-gray-700">Quantity</span>
-                                <span id="qty-summary" class="font-black text-gray-900 text-xl">1</span>
-                            </div>
-                            <div class="border-t-2 border-gray-200 pt-6">
-                                <div class="flex justify-between items-center p-5 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-2xl">
-                                    <div>
-                                        <p class="font-black text-gray-900 text-xl uppercase">Total Amount</p>
-                                        <p class="text-sm text-green-600">Inclusive of all taxes</p>
-                                    </div>
-                                    <span id="total-price" class="font-black text-green-700 text-4xl">₹0</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Action Buttons -->
-                    <div class="flex flex-col justify-center">
-                        <h3 class="text-2xl font-black uppercase mb-6">Next Steps</h3>
-                        
-                        <!-- Add to Cart Button -->
-                        <button id="add-to-cart-btn" 
-                                class="w-full py-5 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-black uppercase rounded-2xl hover:opacity-90 transition-all action-btn text-lg mb-4 disabled:opacity-50 disabled:cursor-not-allowed"
-                                disabled>
-                            <i class="fas fa-cart-plus mr-3"></i>Add to Cart
-                        </button>
-                        
-                        <!-- View Cart Button -->
-                        <a href="https://clean-scripts.github.io/Easygo-Cart/" 
-                           class="w-full py-5 bg-gray-900 text-white font-black uppercase rounded-2xl hover:bg-black transition-all action-btn text-lg mb-4 text-center">
-                            <i class="fas fa-shopping-cart mr-3"></i>View Cart & Continue
-                        </a>
-                        
-                        <!-- Back to Menu -->
-                        <a href="https://clean-scripts.github.io/Easygo-Menu/" 
-                           class="w-full py-4 bg-gray-100 text-gray-700 font-bold uppercase rounded-2xl hover:bg-gray-200 transition-all text-center">
-                            <i class="fas fa-arrow-left mr-3"></i>Back to Menu
-                        </a>
-                        
-                        <p class="text-center text-gray-500 text-xs font-medium mt-6">
-                            🚀 Items auto-save to cart. No extra steps needed!
-                        </p>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Cart Items Preview -->
-            <div id="cart-preview" class="hidden">
-                <div class="flex items-center justify-between mb-6">
-                    <h3 class="text-2xl font-black uppercase">Your Cart Items</h3>
-                    <a href="https://clean-scripts.github.io/Easygo-Cart/" 
-                       class="text-green-600 font-bold text-sm hover:text-green-700">
-                        View All Items →
-                    </a>
-                </div>
-                <div id="cart-items-list" class="space-y-3">
-                    <!-- Cart items will be loaded here -->
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Footer -->
-    <footer class="bg-gray-900 text-white py-8">
-        <div class="max-w-6xl mx-auto px-4">
-            <div class="flex flex-col md:flex-row justify-between items-center">
-                <div class="mb-6 md:mb-0">
-                    <div class="flex items-center">
-                        <img src="https://raw.githubusercontent.com/Clean-Scripts/EasyGo-Expense-Tracker/refs/heads/main/logo.png" 
-                             class="h-12 w-12 rounded-full bg-white p-1 mr-3">
-                        <div>
-                            <h2 class="text-xl font-bold">Easy Go</h2>
-                            <p class="text-gray-400 text-sm">Delivering Freshness & Speed !</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="text-center md:text-right">
-                    <p class="text-gray-400 text-sm mb-2">
-                        © 2024 Easy Go | All Rights Reserved
-                    </p>
-                    <p class="text-gray-500 text-xs">
-                        Serving daily from 5:45 PM to 10:30 PM
-                    </p>
-                    <div class="mt-4">
-                        <a href="https://clean-scripts.github.io/Easygo-Menu/" class="text-gray-400 hover:text-white text-sm mr-4">View Menu</a>
-                         <a href="https://clean-scripts.github.io/Easygo-Privacy/" class="text-gray-400 hover:text-white text-sm">Privacy Policy</a>
-                        <a href="https://clean-scripts.github.io/Easygo-Terms/" class="text-gray-400 hover:text-white text-sm">Terms & Conditions</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </footer>
-
-    <!-- Success Toast -->
-    <div id="success-toast" class="fixed top-4 right-4 bg-green-500 text-white p-6 rounded-2xl shadow-2xl z-50 transform translate-x-full transition-transform duration-500 hidden">
-        <div class="flex items-center gap-4">
-            <i class="fas fa-check-circle text-2xl"></i>
-            <div>
-                <p class="font-bold text-lg">✅ Added to Cart!</p>
-                <p class="text-sm opacity-90">Item saved successfully</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Firebase 8.x for compatibility -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+<body>
+    <!-- Your existing HTML structure -->
     
     <script>
-        // Initialize Firebase with your config
+        // Firebase Configuration
         const firebaseConfig = {
-            apiKey: "AIzaSyDl9MFSI59gSJ0pR_Mk1AluQ8l7e4U42ss",
-            authDomain: "easygo-a9a92.firebaseapp.com",
-            databaseURL: "https://easygo-a9a92-default-rtdb.firebaseio.com",
-            projectId: "easygo-a9a92",
-            storageBucket: "easygo-a9a92.appspot.com",
-            messagingSenderId: "163145885182",
-            appId: "1:163145885182:web:4e2c2d2b83f7584a189be7"
+            apiKey: "AIzaSyCU_wJYBTwEwMZQ-iTYOjUZuEHEphA0DXc",
+            authDomain: "easygo-10f4b.firebaseapp.com",
+            projectId: "easygo-10f4b",
+            storageBucket: "easygo-10f4b.firebasestorage.app",
+            messagingSenderId: "197660067542",
+            appId: "1:197660067542:web:6c616efb479b122f1f6b77",
+            databaseURL: "https://easygo-10f4b-default-rtdb.asia-southeast1.firebasedatabase.app/"
         };
-
-        // Initialize Firebase
-        try {
-            if (!firebase.apps.length) {
-                firebase.initializeApp(firebaseConfig);
-            }
-            window.easygoDB = firebase.database();
-        } catch (error) {
-            console.error("Firebase initialization error:", error);
-        }
-
-        // Get item from URL parameters
-        const urlParams = new URLSearchParams(window.location.search);
-        const itemId = urlParams.get('item');
         
-        // Item database with corrected pricing
-        const items = {
-            'veg-momos-steamed': {
-                id: 'veg-momos-steamed',
-                name: 'Veg Momos (Steamed)',
-                description: 'Delicious steamed vegetable momos with our special garlic sauce. Perfect healthy snack!',
-                image: 'https://raw.githubusercontent.com/Clean-Scripts/Easygo-Menu/refs/heads/main/veg.png',
-                category: 'Hot & Fresh Snacks',
-                hasPieces: true,
-                type: 'steamed',
-                piecePrice: 9,
-                packPrices: {
-                    'standard': 59,
-                    'family': 99,
-                    'xl': 199
-                }
-            },
-            'veg-momos-fried': {
-                id: 'veg-momos-fried',
-                name: 'Veg Momos (Fried)',
-                description: 'Crispy fried vegetable momos with spicy red chutney. Extra crunchy goodness!',
-                image: 'https://raw.githubusercontent.com/Clean-Scripts/Easygo-Menu/refs/heads/main/veg.png',
-                category: 'Hot & Fresh Snacks',
-                hasPieces: true,
-                type: 'fried',
-                piecePrice: 10,
-                packPrices: {
-                    'standard': 79,
-                    'family': 149,
-                    'xl': 299
-                }
-            },
-            'cheese-corn-steamed': {
-                id: 'cheese-corn-steamed',
-                name: 'Cheese Corn Momos (Steamed)',
-                description: 'Steamed momos filled with melted cheese and sweet corn. Creamy delight!',
-                image: 'https://raw.githubusercontent.com/Clean-Scripts/Easygo-Menu/refs/heads/main/cheese-corn.png',
-                category: 'Hot & Fresh Snacks',
-                hasPieces: true,
-                type: 'steamed',
-                piecePrice: 12,
-                packPrices: {
-                    'standard': 89,
-                    'family': 169,
-                    'xl': 349
-                }
-            },
-            'cheese-corn-fried': {
-                id: 'cheese-corn-fried',
-                name: 'Cheese Corn Momos (Fried)',
-                description: 'Fried cheesy corn momos with creamy mayo dip. Ultimate cheesy treat!',
-                image: 'https://raw.githubusercontent.com/Clean-Scripts/Easygo-Menu/refs/heads/main/cheese-corn.png',
-                category: 'Hot & Fresh Snacks',
-                hasPieces: true,
-                type: 'fried',
-                piecePrice: 15,
-                packPrices: {
-                    'standard': 99,
-                    'family': 179,
-                    'xl': 369
-                }
-            },
-            'paneer-steamed': {
-                id: 'paneer-steamed',
-                name: 'Paneer Momos (Steamed)',
-                description: 'Steamed momos with spicy paneer filling. Rich and protein-packed!',
-                image: 'https://raw.githubusercontent.com/Clean-Scripts/Easygo-Menu/refs/heads/main/paneer.png',
-                category: 'Hot & Fresh Snacks',
-                hasPieces: true,
-                type: 'steamed',
-                piecePrice: 12,
-                packPrices: {
-                    'standard': 79,
-                    'family': 149,
-                    'xl': 299
-                }
-            },
-            'paneer-fried': {
-                id: 'paneer-fried',
-                name: 'Paneer Momos (Fried)',
-                description: 'Crispy fried paneer momos with mint coriander chutney.',
-                image: 'https://raw.githubusercontent.com/Clean-Scripts/Easygo-Menu/refs/heads/main/paneer.png',
-                category: 'Hot & Fresh Snacks',
-                hasPieces: true,
-                type: 'fried',
-                piecePrice: 15,
-                packPrices: {
-                    'standard': 89,
-                    'family': 169,
-                    'xl': 329
-                }
-            },
-            'mini-samosas': {
-                id: 'mini-samosas',
-                name: 'Mini Samosas',
-                description: 'Crispy mini samosas with spicy potato-peas filling. Perfect tea-time snack!',
-                image: 'https://raw.githubusercontent.com/Clean-Scripts/Easygo-Menu/refs/heads/main/samosas.png',
-                category: 'Hot & Fresh Snacks',
-                hasPieces: true,
-                type: 'standard',
-                piecePrice: 10,
-                packPrices: {
-                    'standard': 69,
-                    'family': 149,
-                    'xl': 259
-                }
-            },
-            'french-fries': {
-                id: 'french-fries',
-                name: 'French Fries',
-                description: 'Golden crispy french fries with special seasoning. Addictively delicious!',
-                image: 'https://raw.githubusercontent.com/Clean-Scripts/Easygo-Menu/refs/heads/main/fries.png',
-                category: 'Hot & Fresh Snacks',
-                hasPieces: false,
-                packs: {
-                    'standard': { weight: '200g', price: 69 },
-                    'family': { weight: '500g', price: 169 },
-                    'xl': { weight: '1Kg', price: 299 }
-                }
-            }
-        };
-
-        // Current state
-        let currentItem = null;
-        let quantity = 1;
-        let selectedPack = null;
-        let isPiecePack = false;
-        let currentPrice = 0;
-
-        // Initialize page
-        function initPage() {
-            if (!itemId || !items[itemId]) {
-                window.location.href = 'https://clean-scripts.github.io/Easygo-Menu/';
-                return;
-            }
-
-            currentItem = items[itemId];
-            loadItemDetails();
-            setupEventListeners();
-            updateCartSummary();
-            loadCartPreview();
-        }
-
-        // Load item details
-        function loadItemDetails() {
-            // Update page title
-            document.getElementById('page-title').textContent = currentItem.name;
-            
-            // Update item info
-            document.getElementById('item-name').textContent = currentItem.name;
-            document.getElementById('item-category').textContent = currentItem.category;
-            document.getElementById('item-description').textContent = currentItem.description;
-            document.getElementById('item-image').src = currentItem.image;
-            document.getElementById('item-image').alt = currentItem.name;
-            
-            // Load pack options
-            loadPackOptions();
-        }
-
-        // Load pack options
-        function loadPackOptions() {
-            const container = document.getElementById('pack-options-container');
-            
-            if (currentItem.hasPieces) {
-                container.innerHTML = `
-                    <div class="pack-option border-2 border-gray-200 rounded-2xl p-5 text-center cursor-pointer hover:border-green-300"
-                         data-pack="piece" data-price="${currentItem.piecePrice}">
-                        <p class="font-black text-lg uppercase mb-2">Per Piece</p>
-                        <p class="text-gray-600 text-sm mb-3">Individual piece</p>
-                        <p class="text-green-600 font-black text-2xl">₹${currentItem.piecePrice}/pc</p>
-                        <p class="text-xs text-gray-500 mt-3">8 pieces = ₹${currentItem.packPrices.standard}</p>
-                    </div>
-                    <div class="pack-option border-2 border-gray-200 rounded-2xl p-5 text-center cursor-pointer hover:border-green-300"
-                         data-pack="standard" data-price="${currentItem.packPrices.standard}">
-                        <p class="font-black text-lg uppercase mb-2">Standard Pack</p>
-                        <p class="text-gray-600 text-sm mb-3">8 Pieces</p>
-                        <p class="text-green-600 font-black text-2xl">₹${currentItem.packPrices.standard}</p>
-                        <p class="text-xs text-gray-500 mt-3">₹${(currentItem.packPrices.standard/8).toFixed(1)}/pc</p>
-                    </div>
-                    <div class="pack-option border-2 border-gray-200 rounded-2xl p-5 text-center cursor-pointer hover:border-green-300"
-                         data-pack="family" data-price="${currentItem.packPrices.family}">
-                        <p class="font-black text-lg uppercase mb-2">Family Pack</p>
-                        <p class="text-gray-600 text-sm mb-3">16 Pieces</p>
-                        <p class="text-green-600 font-black text-2xl">₹${currentItem.packPrices.family}</p>
-                        <p class="text-xs text-gray-500 mt-3">₹${(currentItem.packPrices.family/16).toFixed(1)}/pc</p>
-                    </div>
-                    <div class="pack-option border-2 border-gray-200 rounded-2xl p-5 text-center cursor-pointer hover:border-green-300"
-                         data-pack="xl" data-price="${currentItem.packPrices.xl}">
-                        <p class="font-black text-lg uppercase mb-2">Party Pack</p>
-                        <p class="text-gray-600 text-sm mb-3">32 Pieces</p>
-                        <p class="text-green-600 font-black text-2xl">₹${currentItem.packPrices.xl}</p>
-                        <p class="text-xs text-gray-500 mt-3">₹${(currentItem.packPrices.xl/32).toFixed(1)}/pc</p>
-                    </div>
-                `;
-            } else {
-                container.innerHTML = `
-                    <div class="pack-option border-2 border-gray-200 rounded-2xl p-5 text-center cursor-pointer hover:border-green-300"
-                         data-pack="standard" data-price="${currentItem.packs.standard.price}">
-                        <p class="font-black text-lg uppercase mb-2">Standard</p>
-                        <p class="text-gray-600 text-sm mb-3">${currentItem.packs.standard.weight}</p>
-                        <p class="text-green-600 font-black text-2xl">₹${currentItem.packs.standard.price}</p>
-                        <p class="text-xs text-gray-500 mt-3">Perfect for one</p>
-                    </div>
-                    <div class="pack-option border-2 border-gray-200 rounded-2xl p-5 text-center cursor-pointer hover:border-green-300"
-                         data-pack="family" data-price="${currentItem.packs.family.price}">
-                        <p class="font-black text-lg uppercase mb-2">Family Pack</p>
-                        <p class="text-gray-600 text-sm mb-3">${currentItem.packs.family.weight}</p>
-                        <p class="text-green-600 font-black text-2xl">₹${currentItem.packs.family.price}</p>
-                        <p class="text-xs text-gray-500 mt-3">For 2-3 people</p>
-                    </div>
-                    <div class="pack-option border-2 border-gray-200 rounded-2xl p-5 text-center cursor-pointer hover:border-green-300"
-                         data-pack="xl" data-price="${currentItem.packs.xl.price}">
-                        <p class="font-black text-lg uppercase mb-2">Party Pack</p>
-                        <p class="text-gray-600 text-sm mb-3">${currentItem.packs.xl.weight}</p>
-                        <p class="text-green-600 font-black text-2xl">₹${currentItem.packs.xl.price}</p>
-                        <p class="text-xs text-gray-500 mt-3">For gatherings</p>
-                    </div>
-                    <div class="border-2 border-gray-100 rounded-2xl p-5 text-center opacity-50 cursor-not-allowed">
-                        <p class="font-black text-lg text-gray-400 uppercase mb-2">Per Piece</p>
-                        <p class="text-gray-400 text-sm mb-3">Not Available</p>
-                        <p class="text-gray-400 font-black text-2xl">-</p>
-                    </div>
-                `;
-            }
-            
-            // Add click handlers
-            document.querySelectorAll('.pack-option:not(.cursor-not-allowed)').forEach(option => {
-                option.onclick = function() {
-                    // Remove selected class from all
-                    document.querySelectorAll('.pack-option').forEach(opt => {
-                        opt.classList.remove('selected');
-                    });
-                    
-                    // Add to clicked
-                    this.classList.add('selected');
-                    
-                    // Update selection
-                    selectedPack = this.dataset.pack;
-                    isPiecePack = (selectedPack === 'piece');
-                    currentPrice = parseFloat(this.dataset.price);
-                    
-                    // Enable add to cart button
-                    document.getElementById('add-to-cart-btn').disabled = false;
-                    
-                    // Update display
-                    updateDisplay();
-                };
-            });
-            
-            // Auto-select first pack
-            setTimeout(() => {
-                const firstPack = document.querySelector('.pack-option:not(.cursor-not-allowed)');
-                if (firstPack) {
-                    firstPack.click();
-                }
-            }, 100);
-        }
-
-        // Setup event listeners
-        function setupEventListeners() {
-            // Quantity buttons
-            document.getElementById('increase-qty').onclick = () => {
-                quantity++;
-                updateDisplay();
-            };
-
-            document.getElementById('decrease-qty').onclick = () => {
-                if (quantity > 1) {
-                    quantity--;
-                    updateDisplay();
-                }
-            };
-
-            // Quick quantity buttons
-            document.querySelectorAll('.quick-qty-btn').forEach(btn => {
-                btn.onclick = () => {
-                    quantity = parseInt(btn.dataset.qty);
-                    updateDisplay();
-                };
-            });
-
-            // Add to cart button
-            document.getElementById('add-to-cart-btn').onclick = addToCart;
-        }
-
-        // Update display
-        function updateDisplay() {
-            // Update quantity display
-            document.getElementById('quantity-display').textContent = quantity;
-            document.getElementById('qty-summary').textContent = quantity;
-            
-            // Enable/disable decrease button
-            document.getElementById('decrease-qty').disabled = quantity <= 1;
-            
-            // Calculate price
-            let itemPrice = currentPrice;
-            let totalPrice = itemPrice * quantity;
-            
-            // Update price displays
-            document.getElementById('item-price').textContent = `₹${itemPrice}`;
-            document.getElementById('total-price').textContent = `₹${totalPrice}`;
-            
-            // Update quantity info
-            updateQuantityInfo();
-        }
-
-        // Update quantity info
-        function updateQuantityInfo() {
-            const infoElement = document.getElementById('quantity-info');
-            
-            if (!selectedPack) {
-                infoElement.textContent = '';
-                return;
-            }
-            
-            if (currentItem.hasPieces && !isPiecePack) {
-                const pieces = selectedPack === 'standard' ? 8 : 
-                              selectedPack === 'family' ? 16 : 32;
-                const totalPieces = pieces * quantity;
-                infoElement.textContent = `${quantity} pack${quantity !== 1 ? 's' : ''} × ${pieces} pieces = ${totalPieces} pieces total`;
-            } else if (currentItem.hasPieces && isPiecePack) {
-                infoElement.textContent = `${quantity} piece${quantity !== 1 ? 's' : ''}`;
-            } else {
-                const pack = currentItem.packs[selectedPack];
-                infoElement.textContent = `${quantity} × ${pack.weight}`;
-            }
-        }
-
-        // Add to cart
-        async function addToCart() {
-            if (!selectedPack) return;
-            
+        let database;
+        let isFirebaseConnected = false;
+        
+        function initializeFirebase() {
             try {
-                // Get cart
-                let cart = JSON.parse(localStorage.getItem('easygo-cart') || '[]');
+                const app = firebase.initializeApp(firebaseConfig);
+                database = firebase.database();
                 
-                // Calculate total pieces/weight
-                let description = '';
-                let totalPieces = 0;
-                
-                if (currentItem.hasPieces) {
-                    if (isPiecePack) {
-                        description = `${quantity} piece${quantity !== 1 ? 's' : ''}`;
-                        totalPieces = quantity;
-                    } else {
-                        const pieces = selectedPack === 'standard' ? 8 : 
-                                      selectedPack === 'family' ? 16 : 32;
-                        description = `${quantity} pack${quantity !== 1 ? 's' : ''} (${pieces} pieces each)`;
-                        totalPieces = pieces * quantity;
-                    }
-                } else {
-                    const pack = currentItem.packs[selectedPack];
-                    description = `${quantity} × ${pack.weight}`;
-                    totalPieces = 0;
-                }
-                
-                // Create cart item
+                const connectedRef = database.ref(".info/connected");
+                connectedRef.on("value", function(snap) {
+                    isFirebaseConnected = snap.val() === true;
+                });
+            } catch (error) {
+                console.error("Firebase error:", error);
+            }
+        }
+        
+        // Track item view
+        function trackItemView(itemId) {
+            if (!isFirebaseConnected) return;
+            
+            database.ref('item_views').push().set({
+                item: itemId,
+                timestamp: Date.now(),
+                date: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })
+            });
+        }
+        
+        // Track add to cart
+        function trackAddToCart(itemData) {
+            if (!isFirebaseConnected) return;
+            
+            database.ref('cart_adds').push().set({
+                ...itemData,
+                timestamp: Date.now(),
+                date: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })
+            });
+        }
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeFirebase();
+            
+            // Track item view
+            const urlParams = new URLSearchParams(window.location.search);
+            const itemId = urlParams.get('item');
+            if (itemId) {
+                trackItemView(itemId);
+            }
+            
+            // Update your existing addToCart function
+            const originalAddToCart = addToCart; // Assuming you have this function
+            window.addToCart = function() {
+                // Your existing cart logic
                 const cartItem = {
-                    id: `${currentItem.id}-${selectedPack}`,
-                    itemId: currentItem.id,
-                    name: currentItem.name,
-                    description: description,
-                    image: currentItem.image,
-                    pack: selectedPack,
-                    isPiecePack: isPiecePack,
-                    unitPrice: currentPrice,
-                    quantity: quantity,
-                    totalPrice: currentPrice * quantity,
-                    totalPieces: totalPieces,
-                    timestamp: new Date().toISOString()
+                    // Your cart item data
                 };
                 
-                // Check if item already exists
-                const existingIndex = cart.findIndex(item => item.id === cartItem.id);
+                // Track in Firebase
+                trackAddToCart(cartItem);
                 
-                if (existingIndex > -1) {
-                    // Update existing item
-                    cart[existingIndex] = cartItem;
-                } else {
-                    // Add new item
-                    cart.push(cartItem);
-                }
-                
-                // Save to localStorage
-                localStorage.setItem('easygo-cart', JSON.stringify(cart));
-                
-                // Save to Firebase if available
-                if (window.easygoDB) {
-                    // Generate a unique cart ID for this session
-                    let cartId = localStorage.getItem('easygo-cart-id');
-                    if (!cartId) {
-                        cartId = 'cart_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-                        localStorage.setItem('easygo-cart-id', cartId);
-                    }
-                    
-                    // Save to Firebase
-                    await easygoDB.ref('carts/' + cartId).set({
-                        items: cart,
-                        lastUpdated: firebase.database.ServerValue.TIMESTAMP,
-                        totalAmount: cart.reduce((sum, item) => sum + item.totalPrice, 0)
-                    });
-                }
-                
-                // Show success message
-                showSuccessToast();
-                
-                // Update cart summary
-                updateCartSummary();
-                loadCartPreview();
-                
-            } catch (error) {
-                console.error("Error adding to cart:", error);
-                // Fallback to localStorage only
-                alert("Cart saved locally! Firebase sync failed.");
-            }
-        }
-
-        // Show success toast
-        function showSuccessToast() {
-            const toast = document.getElementById('success-toast');
-            toast.classList.remove('hidden');
-            toast.classList.remove('translate-x-full');
-            
-            setTimeout(() => {
-                toast.classList.add('translate-x-full');
-                setTimeout(() => {
-                    toast.classList.add('hidden');
-                }, 500);
-            }, 3000);
-        }
-
-        // Update cart summary
-        function updateCartSummary() {
-            const cart = JSON.parse(localStorage.getItem('easygo-cart') || '[]');
-            const cartSummary = document.getElementById('cart-summary');
-            
-            if (cart.length > 0) {
-                const totalAmount = cart.reduce((sum, item) => sum + item.totalPrice, 0);
-                document.getElementById('cart-total').textContent = `₹${totalAmount}`;
-                cartSummary.classList.remove('hidden');
-            } else {
-                cartSummary.classList.add('hidden');
-            }
-        }
-
-        // Load cart preview
-        function loadCartPreview() {
-            const cart = JSON.parse(localStorage.getItem('easygo-cart') || '[]');
-            const cartPreview = document.getElementById('cart-preview');
-            const cartList = document.getElementById('cart-items-list');
-            
-            if (cart.length > 0) {
-                cartList.innerHTML = cart.map(item => `
-                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-2xl">
-                        <div class="flex items-center gap-4">
-                            <img src="${item.image}" alt="${item.name}" class="w-12 h-12 rounded-xl object-cover">
-                            <div>
-                                <p class="font-bold">${item.name}</p>
-                                <p class="text-sm text-gray-500">${item.description}</p>
-                            </div>
-                        </div>
-                        <div class="text-right">
-                            <p class="font-black">₹${item.totalPrice}</p>
-                            <p class="text-sm text-gray-500">${item.quantity} × ₹${item.unitPrice}</p>
-                        </div>
-                    </div>
-                `).join('');
-                
-                cartPreview.classList.remove('hidden');
-            } else {
-                cartPreview.classList.add('hidden');
-            }
-        }
-
-        // Initialize on load
-        window.addEventListener('DOMContentLoaded', initPage);
+                // Continue with original logic
+                return originalAddToCart();
+            };
+        });
     </script>
 </body>
 </html>

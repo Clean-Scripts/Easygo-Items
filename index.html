@@ -277,6 +277,12 @@
         </div>
     </div>
 
+    <!-- Firebase Database -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
+    <script src="https://raw.githubusercontent.com/Clean-Scripts/Easygo-Menu/main/firebase-config.js"></script>
+    <script src="https://raw.githubusercontent.com/Clean-Scripts/Easygo-Menu/main/easygo-db.js"></script>
+
     <script>
         // Get item from URL parameters
         const urlParams = new URLSearchParams(window.location.search);
@@ -423,6 +429,13 @@
             setupEventListeners();
             updateCartSummary();
             loadCartPreview();
+            
+            // Log item view to Firebase
+            easygoDB.logEvent('itemView', {
+                itemId: itemId,
+                itemName: currentItem.name,
+                timestamp: new Date().toISOString()
+            });
         }
 
         // Load item details
@@ -528,6 +541,14 @@
                     
                     // Update display
                     updateDisplay();
+                    
+                    // Log pack selection
+                    easygoDB.logEvent('packSelected', {
+                        itemId: currentItem.id,
+                        pack: selectedPack,
+                        price: currentPrice,
+                        timestamp: new Date().toISOString()
+                    });
                 };
             });
             
@@ -560,6 +581,13 @@
                 btn.onclick = () => {
                     quantity = parseInt(btn.dataset.qty);
                     updateDisplay();
+                    
+                    // Log quick quantity selection
+                    easygoDB.logEvent('quickQuantity', {
+                        itemId: currentItem.id,
+                        quantity: quantity,
+                        timestamp: new Date().toISOString()
+                    });
                 };
             });
 
@@ -610,12 +638,16 @@
             }
         }
 
-        // Add to cart
-        function addToCart() {
+        // Add to cart with Firebase
+        async function addToCart() {
             if (!selectedPack) return;
             
-            // Get cart
-            let cart = JSON.parse(localStorage.getItem('easygo-cart') || '[]');
+            // Get or create session ID
+            let sessionId = localStorage.getItem('easygo_session');
+            if (!sessionId) {
+                sessionId = 'session_' + Date.now() + Math.random().toString(36).substr(2, 9);
+                localStorage.setItem('easygo_session', sessionId);
+            }
             
             // Calculate total pieces/weight
             let description = '';
@@ -653,19 +685,48 @@
                 timestamp: new Date().toISOString()
             };
             
+            // Get existing cart from localStorage
+            let cart = JSON.parse(localStorage.getItem('easygo-cart') || '[]');
+            
             // Check if item already exists
             const existingIndex = cart.findIndex(item => item.id === cartItem.id);
             
             if (existingIndex > -1) {
-                // Update existing item
                 cart[existingIndex] = cartItem;
             } else {
-                // Add new item
                 cart.push(cartItem);
             }
             
-            // Save cart
+            // Save to localStorage
             localStorage.setItem('easygo-cart', JSON.stringify(cart));
+            
+            // Save to Firebase
+            try {
+                const cartData = {
+                    items: cart,
+                    subtotal: cart.reduce((sum, item) => sum + item.totalPrice, 0),
+                    sessionId: sessionId,
+                    lastUpdated: new Date().toISOString()
+                };
+                
+                await easygoDB.saveCart(sessionId, cartData);
+                
+                // Log add to cart event
+                await easygoDB.logEvent('addToCart', {
+                    itemId: currentItem.id,
+                    itemName: currentItem.name,
+                    quantity: quantity,
+                    pack: selectedPack,
+                    price: currentPrice,
+                    total: currentPrice * quantity,
+                    sessionId: sessionId,
+                    timestamp: new Date().toISOString()
+                });
+                
+                console.log("✅ Cart saved to Firebase");
+            } catch (error) {
+                console.error("Error saving cart to Firebase:", error);
+            }
             
             // Show success message
             showSuccessToast();
@@ -734,6 +795,15 @@
 
         // Initialize on load
         window.addEventListener('DOMContentLoaded', initPage);
+        
+        // Log page view
+        window.addEventListener('DOMContentLoaded', () => {
+            easygoDB.logEvent('pageView', {
+                page: 'items',
+                itemId: itemId,
+                timestamp: new Date().toISOString()
+            });
+        });
     </script>
 </body>
 </html>

@@ -110,7 +110,7 @@
             <i class="fas fa-check-circle text-2xl"></i>
             <div>
                 <p class="font-bold text-lg">✅ Added to Cart!</p>
-                <p class="text-sm opacity-90">Item saved to cloud storage</p>
+                <p class="text-sm opacity-90" id="toastMessage">Item saved to cloud storage</p>
             </div>
         </div>
     </div>
@@ -430,37 +430,54 @@
             const cartData = {
                 items: cartItems,
                 updatedAt: Date.now(),
-                userPhone: userPhone
+                userPhone: userPhone,
+                cartTotal: cartItems.reduce((sum, item) => sum + (item.totalPrice || 0), 0),
+                itemCount: cartItems.length
             };
             
             const savedToFirebase = await saveToFirebase(`carts/${userPhone}`, cartData);
             
-            // Also save to localStorage as backup
+            // Also save to localStorage as backup - using BOTH formats for compatibility
             localStorage.setItem(`cart_${userPhone}`, JSON.stringify(cartItems));
+            localStorage.setItem('easygo-cart', JSON.stringify(cartItems));
             localStorage.setItem('easygo-user-phone', userPhone);
+            
+            // Set expiry (7 days)
+            const expiry = new Date();
+            expiry.setDate(expiry.getDate() + 7);
+            localStorage.setItem('easygo-cart-expiry', expiry.toISOString());
             
             return savedToFirebase;
         }
 
         async function getCartFromFirebase() {
-            if (!userPhone) return [];
+            if (!userPhone) {
+                // Try to get cart without phone number
+                const localCart = localStorage.getItem('easygo-cart');
+                return localCart ? JSON.parse(localCart) : [];
+            }
             
             const cartData = await getFromFirebase(`carts/${userPhone}`);
             
             if (cartData && cartData.items) {
                 return cartData.items;
             } else {
-                // Fallback to localStorage
-                const localCart = localStorage.getItem(`cart_${userPhone}`);
+                // Fallback to localStorage - try both formats
+                const userCart = localStorage.getItem(`cart_${userPhone}`);
+                if (userCart) {
+                    return JSON.parse(userCart);
+                }
+                
+                const localCart = localStorage.getItem('easygo-cart');
                 return localCart ? JSON.parse(localCart) : [];
             }
         }
 
         async function updateCartTotal() {
             const cart = await getCartFromFirebase();
-            const total = cart.reduce((sum, item) => sum + (item.unitPrice * item.quantity), 0);
+            const total = cart.reduce((sum, item) => sum + (item.totalPrice || 0), 0);
             
-            document.getElementById('cart-total').textContent = `₹${total}`;
+            document.getElementById('cart-total').textContent = `₹${total.toFixed(2)}`;
             
             if (cart.length > 0) {
                 document.getElementById('cart-summary').classList.remove('hidden');
@@ -523,7 +540,7 @@
             },
             'paneer-fried': {
                 id: 'paneer-fried',
-                name: 'Paneer Momos (Firebase',
+                name: 'Paneer Momos (Fried)',
                 description: 'Crispy fried paneer momos with mint coriander chutney.',
                 image: 'https://raw.githubusercontent.com/Clean-Scripts/Easygo-Menu/refs/heads/main/paneer.png',
                 category: 'Hot & Fresh Snacks',
@@ -750,6 +767,13 @@
 
             // Save phone button
             document.getElementById('save-phone-btn').onclick = savePhoneNumber;
+            
+            // Phone input - allow enter key
+            document.getElementById('user-phone').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    savePhoneNumber();
+                }
+            });
         }
 
         function savePhoneNumber() {
@@ -774,7 +798,7 @@
             updateCartTotal();
             loadCartPreview();
             
-            alert('Phone number saved! Your cart will be saved to the cloud.');
+            showSuccessToast('Phone number saved!', 'Your cart will be saved to the cloud.');
         }
 
         // ==================== DISPLAY FUNCTIONS ====================
@@ -852,9 +876,12 @@
                 totalPieces = 0;
             }
             
-            // Create cart item
+            // Create unique ID for cart item
+            const itemId = `${currentItem.id}-${selectedPack}-${Date.now()}`;
+            
+            // Create cart item with COMPLETE data structure
             const cartItem = {
-                id: `${currentItem.id}-${selectedPack}-${Date.now()}`,
+                id: itemId,
                 itemId: currentItem.id,
                 name: currentItem.name,
                 description: description,
@@ -862,11 +889,14 @@
                 pack: selectedPack,
                 isPiecePack: isPiecePack,
                 unitPrice: currentPrice,
+                price: currentPrice, // duplicate for compatibility
                 quantity: quantity,
                 totalPrice: currentPrice * quantity,
+                total: (currentPrice * quantity).toFixed(2), // duplicate for compatibility
                 totalPieces: totalPieces,
                 timestamp: Date.now(),
-                userPhone: userPhone
+                userPhone: userPhone,
+                category: currentItem.category
             };
             
             // Check if similar item already exists
@@ -880,8 +910,21 @@
                 // Update existing item quantity
                 cart[existingIndex].quantity += quantity;
                 cart[existingIndex].totalPrice = cart[existingIndex].unitPrice * cart[existingIndex].quantity;
+                cart[existingIndex].total = cart[existingIndex].totalPrice.toFixed(2);
                 cart[existingIndex].totalPieces += totalPieces;
                 cart[existingIndex].timestamp = Date.now();
+                
+                // Update description
+                if (currentItem.hasPieces) {
+                    if (isPiecePack) {
+                        cart[existingIndex].description = `${cart[existingIndex].quantity} piece${cart[existingIndex].quantity !== 1 ? 's' : ''}`;
+                    } else {
+                        const pieces = selectedPack === 'standard' ? 8 : 
+                                      selectedPack === 'family' ? 16 : 32;
+                        cart[existingIndex].description = `${cart[existingIndex].quantity} pack${cart[existingIndex].quantity !== 1 ? 's' : ''} (${pieces} pieces each)`;
+                    }
+                }
+                
             } else {
                 // Add new item
                 cart.push(cartItem);
@@ -891,7 +934,7 @@
             const saved = await saveCartToFirebase(cart);
             
             // Show success message
-            showSuccessToast(saved);
+            showSuccessToast('Added to Cart!', saved ? 'Saved to cloud storage' : 'Saved locally');
             
             // Update UI
             updateCartTotal();
@@ -900,7 +943,7 @@
             // Track in Firebase analytics
             if (isFirebaseConnected) {
                 try {
-                    database.ref('cart_adds').push().set({
+                    await database.ref('cart_adds').push().set({
                         itemId: currentItem.id,
                         itemName: currentItem.name,
                         quantity: quantity,
@@ -915,17 +958,13 @@
             }
         }
 
-        function showSuccessToast(savedToFirebase) {
+        function showSuccessToast(title, message) {
             const toast = document.getElementById('successToast');
+            toast.querySelector('.font-bold').textContent = `✅ ${title}`;
+            document.getElementById('toastMessage').textContent = message;
+            
             toast.classList.remove('hidden');
             toast.classList.add('show');
-            
-            // Update message based on storage
-            const message = savedToFirebase ? 
-                "✅ Added to Cart! (Saved to cloud)" : 
-                "✅ Added to Cart! (Saved locally)";
-            
-            toast.querySelector('p').textContent = message;
             
             setTimeout(() => {
                 toast.classList.remove('show');
@@ -953,8 +992,8 @@
                             </div>
                         </div>
                         <div class="text-right">
-                            <p class="font-black">₹${item.totalPrice}</p>
-                            <p class="text-sm text-gray-500">${item.quantity} × ₹${item.unitPrice}</p>
+                            <p class="font-black">₹${(item.totalPrice || item.total || 0).toFixed(2)}</p>
+                            <p class="text-sm text-gray-500">${item.quantity} × ₹${(item.unitPrice || item.price || 0).toFixed(2)}</p>
                         </div>
                     </div>
                 `).join('');
@@ -967,11 +1006,15 @@
 
         // ==================== INITIALIZE PAGE ====================
         window.addEventListener('DOMContentLoaded', function() {
+            console.log('EasyGo Item Page Loading...');
+            
             // Initialize Firebase
             initializeFirebase();
             
             // Initialize page after short delay
             setTimeout(initPage, 100);
+            
+            console.log('Item page initialized successfully');
         });
     </script>
 </body>
